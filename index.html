@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>ARUME V52 · Financial Control</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #f8fafc; --paper: #ffffff; --text: #0f172a; --sub: #64748b;
+      --primary: #0f172a; --accent: #2563eb;
+      --success: #16a34a; --danger: #dc2626; --warn: #d97706;
+      --border: #e2e8f0; --radius: 12px;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 110px; min-height: 100vh; }
+
+    /* HEADER */
+    header { background: var(--paper); padding: 15px 20px; position: sticky; top: 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+    h1 { margin: 0; font-size: 1.3rem; font-weight: 900; letter-spacing: -0.5px; color: var(--primary); display:flex; align-items:center; gap:8px; }
+    .badge { padding: 6px 12px; border-radius: 99px; font-size: 0.75rem; background: #f1f5f9; color: var(--text); font-weight: 700; border: 1px solid var(--border); cursor: pointer; display: flex; align-items:center; gap:8px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; } .dot.ok { background: var(--success); box-shadow: 0 0 6px var(--success); }
+
+    /* LAYOUT */
+    main { max-width: 900px; margin: 0 auto; padding: 20px; animation: fade 0.3s ease-out; }
+    @keyframes fade { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+    .card { background: var(--paper); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+    .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f8fafc; padding-bottom: 12px; margin-bottom: 15px; }
+    .title { font-size: 0.85rem; font-weight: 900; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+    .row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; } .col { flex: 1; min-width: 140px; }
+
+    /* KPIs FINANCIEROS */
+    .kpi-row { display: flex; gap: 10px; margin-bottom: 15px; }
+    .kpi-card { flex:1; background: var(--primary); color: white; padding: 15px; border-radius: var(--radius); text-align: center; }
+    .kpi-val { font-size: 1.4rem; font-weight: 900; }
+    .kpi-lbl { font-size: 0.7rem; opacity: 0.8; text-transform: uppercase; margin-top: 4px; }
+
+    /* LISTAS & TABLAS */
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 100%; }
+    th { text-align: left; background: #f8fafc; color: var(--sub); padding: 12px 10px; font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    td { padding: 14px 10px; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+    tr:last-child td { border: none; }
+
+    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 10px; border-bottom: 1px solid #f1f5f9; transition: 0.1s; cursor: pointer; }
+    .list-item:active { background: #f1f5f9; }
+    .list-item:last-child { border: none; }
+
+    /* INPUTS */
+    label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--sub); margin-bottom: 5px; text-transform: uppercase; }
+    input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 15px; background: #fff; font-family: inherit; margin-bottom: 10px; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #bfdbfe; }
+    .search-bar { background: #fff; border: 1px solid var(--border); margin-bottom: 15px; box-shadow: 0 4px 6px -2px rgba(0,0,0,0.03); padding: 10px; border-radius:10px; }
+
+    /* BOTONES */
+    .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; font-size: 1rem; text-align: center; margin-top: 5px; transition: 0.1s; display: inline-flex; justify-content:center; align-items:center; gap:8px; }
+    .btn:active { transform: scale(0.97); opacity: 0.9; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-accent { background: var(--accent); color: white; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-danger { background: #fee2e2; color: var(--danger); }
+    .btn-sm { width: auto; padding: 8px 16px; font-size: 0.8rem; margin: 0; }
+
+    .status-btn { padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; cursor: pointer; border: none; transition: 0.2s; }
+    .status-btn.paid { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .status-btn.pending { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+    /* ALBARAN GRID */
+    .alb-row { display: flex; gap: 5px; margin-bottom: 8px; align-items: center; background: #fff; border: 1px solid #f1f5f9; padding: 5px; border-radius: 8px; }
+    .alb-row input { margin: 0; padding: 8px; font-size: 0.9rem; }
+    .alb-name { flex: 3; min-width: 120px; }
+    .alb-num { flex: 1; min-width: 50px; text-align: right; }
+
+    /* NAV */
+    nav { position: fixed; bottom: 0; width: 100%; background: rgba(255,255,255,0.96); backdrop-filter: blur(8px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; gap:4px; padding:6px; z-index:60; }
+    nav button { background: none; border: none; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--sub); font-size: 0.65rem; font-weight: 700; padding: 5px 8px; border-radius:8px; }
+    nav button.active { opacity: 1; color: var(--accent); transform: translateY(-3px); }
+    nav button svg { width: 26px; height: 26px; fill: currentColor; }
+
+    /* MODAL */
+    .hidden { display: none !important; }
+    .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 100; backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; }
+    .modal { background: white; width: 95%; max-width: 700px; max-height: 90vh; overflow-y: auto; padding: 25px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+
+    /* PIN PAD */
+    #pin-screen { background: #0f172a; color: white; }
+    .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; max-width: 320px; margin-left: auto; margin-right: auto; }
+    .pin-btn { height: 75px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); font-size: 1.8rem; color: white; cursor: pointer; font-weight: 600; }
+    .pin-btn:active { background: rgba(255,255,255,0.2); }
+
+    /* TOAST */
+    #toast-container { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); z-index: 200; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    .toast { background: #1e293b; color: white; padding: 14px 20px; border-radius: 12px; font-size: 0.95rem; font-weight: 600; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); animation: slideUp 0.3s ease forwards; pointer-events: auto; }
+    .toast.success { border-bottom: 4px solid var(--success); }
+    .toast.error { border-bottom: 4px solid var(--danger); }
+    @keyframes slideUp { from{opacity:0; transform:translateY(20px) translateX(-50%)} to{opacity:1; transform:translateY(0) translateX(-50%)} }
+
+    /* small helpers */
+    .matrix-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; }
+    .matrix-box { padding:12px; border-radius:8px; background:#f8fafc; text-align:center; }
+
+    /* small responsive */
+    @media (max-width:520px){
+      .col { min-width: 120px; }
+      .pin-grid { gap:10px }
+      .pin-btn { height:64px; font-size:1.4rem }
+    }
+  </style>
+</head>
+<body>
+  <div id="toast-container" aria-live="polite"></div>
+  <input type="file" id="backup-input" style="display:none" accept=".json,application/json">
+
+  <header>
+    <h1>ARUME <span style="font-size:0.6em; opacity:0.6; font-weight:400">V52</span></h1>
+    <button id="user-display" class="badge" aria-label="Usuario actual">
+      <div id="sync-dot" class="dot" aria-hidden="true"></div> <span id="user-name">...</span>
+    </button>
+  </header>
+
+  <main id="app" role="main"></main>
+  <nav id="navbar" role="navigation" aria-label="Navegación principal"></nav>
+
+  <div id="modal-overlay" class="overlay hidden" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-title">
+      <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+        <h3 id="m-title" style="margin:0; font-size:1.2rem; font-weight:900; color:var(--primary)"></h3>
+        <button id="modal-close" style="background:none;border:none;font-size:2rem;cursor:pointer;color:var(--sub);line-height:1" aria-label="Cerrar">&times;</button>
+      </div>
+      <div id="m-body"></div>
+    </div>
+  </div>
+
+  <div id="pin-screen" class="overlay" style="opacity:1" aria-hidden="false">
+    <div class="modal" style="text-align:center; background:transparent; box-shadow:none; color:white">
+      <h2 style="font-size:3rem; margin:0; letter-spacing:2px; font-weight:900">ARUME</h2>
+      <p style="opacity:0.6; margin-bottom:40px; letter-spacing:1px; text-transform:uppercase">Sistema de Gestión Integral</p>
+      <div id="pin-display" style="font-size:3rem; font-weight:800; letter-spacing:15px; min-height:60px">****</div>
+      <div class="pin-grid" id="pin-grid">
+        <button class="pin-btn" data-num="1">1</button><button class="pin-btn" data-num="2">2</button><button class="pin-btn" data-num="3">3</button>
+        <button class="pin-btn" data-num="4">4</button><button class="pin-btn" data-num="5">5</button><button class="pin-btn" data-num="6">6</button>
+        <button class="pin-btn" data-num="7">7</button><button class="pin-btn" data-num="8">8</button><button class="pin-btn" data-num="9">9</button>
+        <button class="pin-btn" id="pin-clear" style="color:var(--danger); border-color:rgba(239,68,68,0.3)">C</button>
+        <button class="pin-btn" data-num="0">0</button>
+        <button class="pin-btn" id="pin-ok" style="background:var(--success); border:none; color:#022c22">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>ARUME V52 · Financial Control (estable)</title>
+  <title>ARUME V52 · Financial Control (consolidado)</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -35,14 +35,14 @@
     nav{position:fixed;bottom:0;width:100%;background:rgba(255,255,255,0.96);border-top:1px solid var(--border);display:flex;gap:6px;justify-content:space-around;padding:8px;z-index:60}
     nav button{background:none;border:none;color:var(--sub);font-weight:800;display:flex;flex-direction:column;align-items:center}
     .overlay{position:fixed;inset:0;background:rgba(15,23,42,0.7);display:flex;align-items:center;justify-content:center;z-index:200}
-    .overlay.hidden{ display:none !important; } /* ensure hidden truly hides overlay */
-    .modal{background:white;width:95%;max-width:900px;max-height:92vh;overflow:auto;border-radius:14px;padding:18px;box-shadow:0 10px 30px rgba(2,6,23,0.2)}
+    .overlay.hidden{ display:none !important; }
+    .modal{background:white;width:95%;max-width:900px;max-height:92vh;overflow:auto;border-radius:14px;padding:18px;box-shadow:0 10px 30px rgba(2,6,23,0.12)}
     .allergen-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
     .toast{position:fixed;bottom:140px;left:50%;transform:translateX(-50%);background:#0f172a;color:white;padding:10px 14px;border-radius:10px;z-index:400}
     pre{white-space:pre-wrap;word-wrap:break-word}
     img.preview { max-width:140px; border-radius:8px; border:1px solid #eee; }
-    table { border-collapse: collapse; width: 100%; }
-    table th, table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; text-align: left; font-size: 0.9rem; }
+    table { border-collapse: collapse; width:100%; }
+    table th, table td { padding:6px 8px; border-bottom:1px solid #f1f5f9; text-align:left; font-size:0.9rem; }
   </style>
 </head>
 <body>
@@ -70,24 +70,24 @@
     </div>
   </div>
 
+  <!-- hidden inputs -->
   <input type="file" id="backup-input" accept=".json" style="display:none">
   <input type="file" id="alb-photo-input" accept="image/*" capture="environment" style="display:none">
 
 <script>
-/*
-  ARUME V52 — Full consolidated file
-  Goals:
-  - Keep all features (albaranes, fotos in IDB, recetas, alérgenos, cronómetro, pedido inteligente, export XLSX)
-  - Fix modal overlay stuck bug and make modal accessible (ESC and click outside to close)
-  - Harden IDB usage with availability flag and fallbacks
-  - Avoid inline event handlers and unsafe innerHTML usage (escape user input)
-  - Delete images from IDB when albarán removed
+/* ARUME V52 - Consolidated & cleaned single-file app
+   - All features included: ingredientes, recetas, alérgenos (14), albaranes, fotos en IndexedDB,
+     migración de fotos, inspección de sanidad, pedido por WhatsApp seguro, cronómetro, export XLSX.
+   - Robust modal behavior (click outside, ESC, close button).
+   - Escape user data before injecting HTML.
+   - IDB guarded with idbAvailable flag; fallbacks with friendly toasts.
+   - No inline onclicks; uses data-* attributes and event listeners.
 */
 
 (() => {
   'use strict';
 
-  /* ---------- Config ---------- */
+  /* ---------- CONFIG ---------- */
   const CONFIG = {
     COST_HOUR: 15,
     SAVE_DEBOUNCE_MS: 300,
@@ -115,13 +115,12 @@
 
   const DB_INIT = {
     users: [{id:'u1', n:'Gerencia', pin:'0150', role:'admin'}, {id:'u2', n:'Cocina', pin:'1111', role:'staff'}],
-    ingredientes: [],
-    recetas: [],
+    ingredientes: [], recetas: [],
     proveedores: [{n:'Makro'}, {n:'Tokyo-ya'}, {n:'Frutas Daniel'}],
     albaranes: [], facturas: [], diario: [], mermas: [], salesLog: [], fixedExpenses: [], lastSync: 0
   };
 
-  /* ---------- Helpers ---------- */
+  /* ---------- UTILITIES ---------- */
   const $ = id => document.getElementById(id);
   const uid = ()=> (crypto?.randomUUID?.() || Date.now().toString(36)+Math.random().toString(36).slice(2));
   const clone = v => (typeof structuredClone === 'function') ? structuredClone(v) : JSON.parse(JSON.stringify(v));
@@ -132,31 +131,27 @@
   function formatMoney(v){ return Number(v||0).toFixed(2) + '€'; }
 
   function defaultAllergens(){ const a={}; ALLERGENS.forEach(x=>a[x.key]=false); return a; }
-  function mergeAllergens(a,b){ const out={}; ALLERGENS.forEach(x=> out[x.key]= !!((a&&a[x.key]) || (b&&b[x.key])); ); return out; }
-  function mergeAllergens(mapA, mapB){
-    const out = {};
-    ALLERGENS.forEach(a => out[a.key] = !!( (mapA && mapA[a.key]) || (mapB && mapB[a.key]) ));
-    return out;
-  }
+  function mergeAllergens(mapA, mapB){ const out={}; ALLERGENS.forEach(a=> out[a.key]= !!((mapA && mapA[a.key]) || (mapB && mapB[a.key])) ); return out; }
+  function allergenListFromMap(map){ return ALLERGENS.filter(a => map && map[a.key]).map(a => ({key:a.key,label:a.label,emoji:a.emoji})); }
 
-  function allergenListFromMap(map){
-    return ALLERGENS.filter(a => map && map[a.key]).map(a => ({key:a.key,label:a.label,emoji:a.emoji}));
-  }
-
-  /* ---------- State ---------- */
+  /* ---------- STATE ---------- */
   let db = safeGet('arume_v52') || clone(DB_INIT);
   let currentUser = safeGet('arume_user') || null;
   let charts = {};
   let idbAvailable = true;
 
-  /* ---------- Save (debounced) ---------- */
+  /* ---------- SAVE debounced ---------- */
   let saveTimer = null;
   function save(msg){
     if(saveTimer) clearTimeout(saveTimer);
-    saveTimer = setTimeout(()=>{ db.lastSync = Date.now(); safeSet('arume_v52', db); if(msg) showToast(msg); }, CONFIG.SAVE_DEBOUNCE_MS);
+    saveTimer = setTimeout(()=>{
+      db.lastSync = Date.now();
+      safeSet('arume_v52', db);
+      if(msg) showToast(msg);
+    }, CONFIG.SAVE_DEBOUNCE_MS);
   }
 
-  /* ---------- IndexedDB (images) ---------- */
+  /* ---------- IndexedDB helpers (images) ---------- */
   function idbOpen(){
     return new Promise((resolve, reject) => {
       if(!('indexedDB' in window)) return reject(new Error('IndexedDB no disponible'));
@@ -206,10 +201,10 @@
     });
   }
 
-  /* ---------- Image resize ---------- */
+  /* ---------- Image compression ---------- */
   function resizeImageFile(file, maxWidth = CONFIG.IMG_MAX_WIDTH, quality = CONFIG.IMG_QUALITY){
     return new Promise((res, rej) => {
-      if(!file.type.startsWith('image/')) return rej(new Error('No es imagen'));
+      if(!file || !file.type || !file.type.startsWith('image/')) return rej(new Error('No es imagen'));
       const fr = new FileReader();
       fr.onload = e => {
         const img = new Image();
@@ -230,14 +225,14 @@
     });
   }
 
-  /* ---------- WhatsApp helper ---------- */
+  /* ---------- WhatsApp helper (safe) ---------- */
   function openWhatsAppWithText(text){
     const encoded = encodeURIComponent(text);
     window.open('https://wa.me/?text=' + encoded, '_blank');
   }
   window.openWhatsAppWithText = openWhatsAppWithText;
 
-  /* ---------- Migration (move existing dataURL photos into IDB) ---------- */
+  /* ---------- Migration: move dataURL photos to IDB ---------- */
   async function migratePhotosToIDB(){
     if(!idbAvailable) return;
     const pending = (db.albaranes || []).filter(a => a && a.photo && typeof a.photo === 'string' && a.photo.startsWith('data:'));
@@ -254,39 +249,35 @@
     if(pending.length) save('Migradas fotos a IndexedDB');
   }
 
-  /* ---------- Modal helpers (fixed/stable) ---------- */
+  /* ---------- Modal helpers (stable) ---------- */
   function showModal(title, content){
     const ov = $('modal-overlay'); const titleEl = $('m-title'); const body = $('m-body');
     if(!ov || !titleEl || !body) return;
     titleEl.textContent = title || '';
     body.innerHTML = '';
-    if(content instanceof Node) body.appendChild(content);
-    else body.innerHTML = content || '';
+    if(content instanceof Node) body.appendChild(content); else body.innerHTML = content || '';
     ov.classList.remove('hidden'); ov.setAttribute('aria-hidden','false');
-    // focus first interactive element for accessibility
     setTimeout(()=> { const f = ov.querySelector('button, [tabindex], input'); if(f) f.focus(); }, 60);
   }
   function closeModal(){ const ov = $('modal-overlay'); if(!ov) return; ov.classList.add('hidden'); ov.setAttribute('aria-hidden','true'); $('m-title').textContent=''; $('m-body').innerHTML=''; }
 
-  /* Overlay click and ESC */
+  /* Close modal on overlay click and ESC */
   document.addEventListener('DOMContentLoaded', () => {
-    const overlay = $('modal-overlay');
-    const closeBtn = $('modal-close');
+    const overlay = $('modal-overlay'); const closeBtn = $('modal-close');
     if(closeBtn) closeBtn.addEventListener('click', closeModal);
-    if(overlay){
-      overlay.addEventListener('click', (e) => { if(e.target === overlay) closeModal(); });
-    }
+    if(overlay) overlay.addEventListener('click', (e) => { if(e.target === overlay) closeModal(); });
     document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModal(); });
   });
 
-  /* ---------- Init UI ---------- */
+  /* ---------- INIT UI ---------- */
   function initUI(){
-    // IDB availability test + migration
+    // check IndexedDB availability and migrate images if possible
     idbOpen().then(dbi => { idbAvailable = true; dbi.close(); migratePhotosToIDB().catch(e=>console.warn('Migration failed', e)); })
-                .catch(e => { idbAvailable = false; console.warn('IndexedDB no disponible:', e); showToast('Aviso: IndexedDB no disponible — fotos no persistirán entre sesiones'); });
+               .catch(e => { idbAvailable = false; console.warn('IndexedDB no disponible', e); showToast('Aviso: IndexedDB no disponible — fotos no persistirán entre sesiones'); });
 
     $('user-display').textContent = currentUser ? currentUser.n : 'Iniciar';
-    renderNav(); render(currentUser?.role === 'admin' ? 'Admin' : 'Cocina');
+    renderNav();
+    render(currentUser?.role === 'admin' ? 'Admin' : 'Cocina');
 
     // backup input
     const backupInput = $('backup-input');
@@ -302,7 +293,7 @@
           } else showToast('Backup inválido');
         } catch(err){ showToast('Error leyendo backup'); }
       };
-      fr.readAsText(f); e.target.value = '';
+      fr.readAsText(f); e.target.value='';
     });
 
     // alb photo input
@@ -323,20 +314,19 @@
     });
 
     // alerts button
-    $('alerts-btn').addEventListener('click', showAlertsModal);
+    const alertsBtn = $('alerts-btn'); if(alertsBtn) alertsBtn.addEventListener('click', showAlertsModal);
   }
 
-  /* ---------- Navigation ---------- */
+  /* ---------- NAV & RENDER dispatcher ---------- */
   function renderNav(){
     const nav = $('navbar'); nav.innerHTML = '';
     const views = { Diario:'CAJA', Admin:'GESTIÓN', Cocina:'COCINA', Stock:'STOCK' };
-    Object.entries(views).forEach(([k,v]) => {
+    Object.entries(views).forEach(([k,v])=>{
       if(k === 'Admin' && currentUser?.role !== 'admin') return;
-      const btn = document.createElement('button'); btn.textContent = v;
-      btn.addEventListener('click', ()=> render(k));
-      nav.appendChild(btn);
+      const btn = document.createElement('button'); btn.textContent = v; btn.addEventListener('click', ()=> render(k)); nav.appendChild(btn);
     });
   }
+
   function render(view){
     const app = $('app'); app.innerHTML = '';
     if(view === 'Diario') return renderDiario(app);
@@ -345,7 +335,7 @@
     if(view === 'Stock') return renderStock(app);
   }
 
-  /* ---------- Diario ---------- */
+  /* ---------- DIARIO ---------- */
   function renderDiario(target){
     const today = new Date().toISOString().slice(0,10);
     const rep = (db.diario||[]).find(d=>d.date===today) || {};
@@ -356,7 +346,7 @@
         <div style="text-align:right;margin-top:8px"><button class="btn btn-primary" id="save-z">Guardar</button></div>
       </div>
     `;
-    $('save-z').addEventListener('click', ()=> {
+    $('save-z').addEventListener('click', ()=>{
       const d = { date: today, total: parseFloat($('z-total').value)||0, cash: parseFloat($('z-cash').value)||0, card:0, inv:0 };
       db.diario = db.diario || []; const idx = db.diario.findIndex(x=>x.date===d.date);
       if(idx>=0) db.diario[idx]=d; else db.diario.push(d);
@@ -364,7 +354,7 @@
     });
   }
 
-  /* ---------- Admin ---------- */
+  /* ---------- ADMIN ---------- */
   function renderAdmin(target){
     target.innerHTML = `
       <div class="card"><div class="section-header"><div class="title">Admin</div><div></div></div>
@@ -382,7 +372,7 @@
     renderContabilidad();
   }
 
-  /* ---------- Albaranes (with datalist & note & images) ---------- */
+  /* ---------- ALBARANES (with datalist, note, image) ---------- */
   function renderAlbaran(){
     const panel = $('admin-panel'); if(!panel) return;
     panel.innerHTML = `
@@ -413,11 +403,9 @@
     $('parse-alb').addEventListener('click', parseAlb);
     $('commit-alb').addEventListener('click', commitAlb);
 
-    // show transient photo preview if present
     if(window._transientAlbPhoto){
       panel.dataset.albPhoto = window._transientAlbPhoto;
-      const prev = $('alb-photo-preview');
-      if(prev) prev.innerHTML = `<img src="${window._transientAlbPhoto}" class="preview">`;
+      const prev = $('alb-photo-preview'); if(prev) prev.innerHTML = `<img src="${window._transientAlbPhoto}" class="preview">`;
       delete window._transientAlbPhoto;
     }
   }
@@ -488,7 +476,7 @@
     }));
   }
 
-  /* ---------- Commit albarán (persist to DB + IDB image) ---------- */
+  /* ---------- Commit albarán (persist & update ingredients) ---------- */
   async function commitAlb(){
     if(!tempItems.length) return showToast('Vacío');
     const prov = $('alb-prov').value.trim();
@@ -508,16 +496,14 @@
             attachedPhotoKey = key;
           } catch(err){
             console.warn('Error guardando imagen en IDB', err);
-            attachedPhotoKey = photoCandidate;
-            showToast('No se pudo guardar la imagen en IndexedDB (se mantendrá temporalmente)');
+            attachedPhotoKey = photoCandidate; // fallback
+            showToast('No se pudo guardar la imagen en IndexedDB (temporal)');
           }
         } else {
           attachedPhotoKey = photoCandidate;
           showToast('IndexedDB no disponible: imagen no persistirá entre sesiones');
         }
-      } else {
-        attachedPhotoKey = photoCandidate; // already a key
-      }
+      } else attachedPhotoKey = photoCandidate;
     } else if(window._transientAlbPhoto){
       if(idbAvailable){
         try {
@@ -526,8 +512,7 @@
           attachedPhotoKey = key; delete window._transientAlbPhoto;
         } catch(err){ console.warn('Error guardando imagen transitoria', err); attachedPhotoKey = window._transientAlbPhoto; }
       } else {
-        attachedPhotoKey = window._transientAlbPhoto; delete window._transientAlbPhoto;
-        showToast('IndexedDB no disponible: imagen no persistirá entre sesiones');
+        attachedPhotoKey = window._transientAlbPhoto; delete window._transientAlbPhoto; showToast('IndexedDB no disponible: imagen no persistirá entre sesiones');
       }
     }
 
@@ -561,12 +546,10 @@
     renderContabilidad();
   }
 
-  /* ---------- Delete albarán (with IDB cleanup) ---------- */
+  /* ---------- Delete albarán (and delete image from IDB if necessary) ---------- */
   async function deleteAlbaran(albId){
-    const a = db.albaranes.find(x => x.id === albId);
-    if(!a) return;
+    const a = db.albaranes.find(x => x.id === albId); if(!a) return;
     if(!confirm('Eliminar albarán? Esta acción es irreversible.')) return;
-    // delete image if IDB key
     if(a.photo && typeof a.photo === 'string' && a.photo.startsWith('img_') && idbAvailable){
       try { await idbDeleteImage(a.photo); } catch(err){ console.warn('No se pudo borrar imagen IDB', err); }
     }
@@ -575,7 +558,7 @@
     renderContabilidad();
   }
 
-  /* ---------- View albarán ---------- */
+  /* ---------- View albarán (retrieve image if key) ---------- */
   async function viewAlbaran(id){
     const a = db.albaranes.find(x=>x.id===id); if(!a) return;
     const itemsHtml = (a.items||[]).map(it=>`<tr><td>${escapeHTML(it.n)}</td><td>${it.q}</td><td>${it.p}€</td><td>${it.d||0}%</td><td>${it.iva||0}%</td><td><b>${((it.q*it.p*(1-(it.d||0)/100)*(1+(it.iva||0)/100))||0).toFixed(2)}€</b></td></tr>`).join('');
@@ -598,22 +581,15 @@
     container.innerHTML = `
       <div style="margin-bottom:15px; font-size:0.9rem; color:var(--sub)">Fecha: <b>${escapeHTML(a.date || '')}</b><br>Estado: <b>${a.invoiced ? 'FACTURADO' : 'PENDIENTE'}</b></div>
       ${photoHtml}
-      <div class="table-wrap" style="margin-bottom:15px">
-        <table style="font-size:0.9rem">
-          <thead><tr><th>Prod</th><th>Cant</th><th>Pre</th><th>Dto</th><th>IVA</th><th>Tot</th></tr></thead>
-          <tbody>${itemsHtml}</tbody>
-        </table>
-      </div>
+      <div class="table-wrap" style="margin-bottom:15px"><table style="font-size:0.9rem"><thead><tr><th>Prod</th><th>Cant</th><th>Pre</th><th>Dto</th><th>IVA</th><th>Tot</th></tr></thead><tbody>${itemsHtml}</tbody></table></div>
       <div style="text-align:right; font-size:1.2rem; font-weight:800; margin-bottom:10px">Total: ${(a.total||0).toFixed(2)}€</div>
       ${a.note ? `<div style="background:#fffbeb; padding:10px; border-radius:8px; font-size:0.9rem">📝 <b>Nota:</b> ${escapeHTML(a.note)}</div>` : ''}
     `;
-    // add delete button
     const footer = document.createElement('div'); footer.style.textAlign='right'; footer.style.marginTop='10px';
     const delBtn = document.createElement('button'); delBtn.className='btn btn-ghost'; delBtn.textContent='Eliminar albarán';
     delBtn.addEventListener('click', async () => { await deleteAlbaran(a.id); closeModal(); });
     footer.appendChild(delBtn);
     container.appendChild(footer);
-
     showModal(`Albarán ${escapeHTML(a.prov)}`, container);
   }
 
@@ -663,10 +639,8 @@
       <label>Importe</label><input id="inv-total" type="number" value="${total}" />
       <div style="text-align:right;margin-top:8px"><button class="btn btn-primary" id="create-inv">Crear</button></div>
     `);
-    // attach listener after modal created
     setTimeout(()=> {
-      const createBtn = $('create-inv');
-      if(createBtn) createBtn.addEventListener('click', ()=> {
+      const createBtn = $('create-inv'); if(createBtn) createBtn.addEventListener('click', ()=> {
         const code = $('inv-code').value.trim();
         const provName = $('inv-prov').value.trim();
         const tot = parseFloat($('inv-total').value) || 0;
@@ -678,19 +652,15 @@
     }, 50);
   }
 
-  /* ---------- Tools (thermometer & smart order) ---------- */
+  /* ---------- Tools: thermometer & smart order ---------- */
   function renderTools(){
     const panel = $('admin-panel'); if(!panel) return;
-    panel.innerHTML = `
-      <div class="card"><div class="section-header"><div class="title">Herramientas Inteligencia</div></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-ghost" id="btn-therm">Termómetro compras</button>
-          <button class="btn btn-ghost" id="btn-order">Pedido inteligente (WhatsApp)</button>
-          <button class="btn btn-ghost" id="btn-xlsx">Exportar XLSX</button>
-        </div>
-      </div>
-      <div id="tools-body"></div>
-    `;
+    panel.innerHTML = `<div class="card"><div class="section-header"><div class="title">Herramientas Inteligencia</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" id="btn-therm">Termómetro compras</button>
+        <button class="btn btn-ghost" id="btn-order">Pedido inteligente (WhatsApp)</button>
+        <button class="btn btn-ghost" id="btn-xlsx">Exportar XLSX</button>
+      </div></div><div id="tools-body"></div>`;
     $('btn-therm').addEventListener('click', showPurchaseThermometer);
     $('btn-order').addEventListener('click', ()=> generateSmartOrder(true));
     $('btn-xlsx').addEventListener('click', exportAllXLSX);
@@ -705,25 +675,15 @@
       <canvas id="therm-canvas" style="height:320px"></canvas>
       <div id="therm-legend"></div>
     `);
-    setTimeout(()=> {
-      const run = $('therm-run');
-      if(run) run.addEventListener('click', ()=> renderThermometerChart($('therm-month').value));
-      renderThermometerChart(new Date().toISOString().slice(0,7));
-    }, 50);
+    setTimeout(()=> { const run = $('therm-run'); if(run) run.addEventListener('click', ()=> renderThermometerChart($('therm-month').value)); renderThermometerChart(new Date().toISOString().slice(0,7)); }, 60);
   }
 
   function renderThermometerChart(month){
     const start = new Date(month + '-01T00:00:00');
     const end = new Date(start.getFullYear(), start.getMonth()+1, 1);
     const sums = {};
-    (db.albaranes||[]).forEach(a=>{
-      const dt = new Date(a.date);
-      if(dt >= start && dt < end){
-        sums[a.prov] = (sums[a.prov]||0) + (a.total || 0);
-      }
-    });
-    const labels = Object.keys(sums);
-    const data = labels.map(l=> sums[l]);
+    (db.albaranes||[]).forEach(a=>{ const dt = new Date(a.date); if(dt >= start && dt < end) sums[a.prov] = (sums[a.prov]||0) + (a.total || 0); });
+    const labels = Object.keys(sums); const data = labels.map(l=> sums[l]);
     const ctx = $('therm-canvas');
     if(ctx && window.Chart){
       if(charts.therm) charts.therm.destroy();
@@ -732,7 +692,6 @@
     }
   }
 
-  // Smart order safe
   window._lastSmartOrderGroups = [];
   function generateSmartOrder(openWhatsapp=false){
     const toBuy = (db.ingredientes||[]).filter(i => (i.stock||0) < (i.min||0));
@@ -742,7 +701,7 @@
 
     window._lastSmartOrderGroups = [];
     let html = `<div style="max-height:60vh;overflow:auto">`;
-    Object.entries(groups).forEach(([prov, items], idx)=>{
+    Object.entries(groups).forEach(([prov, items], idx) => {
       let plain = `Hola ${prov},\nNecesito los siguientes productos:\n`;
       items.forEach(it => { const needed = Math.max(0, (it.min||0) - (it.stock||0)); plain += `- ${it.n}: ${needed} ${it.unit||''}\n`; });
       window._lastSmartOrderGroups.push({ prov, items, text: plain });
@@ -761,28 +720,15 @@
 
     setTimeout(()=> {
       const modal = $('m-body');
-      modal.querySelectorAll('.copy-btn').forEach(btn => btn.addEventListener('click', e => {
-        const idx = Number(e.currentTarget.dataset.groupIndex); const group = window._lastSmartOrderGroups[idx];
-        if(group) navigator.clipboard.writeText(group.text).then(()=> showToast('Pedido copiado')).catch(()=> showToast('No se pudo copiar'));
-      }));
-      modal.querySelectorAll('.print-btn').forEach(btn => btn.addEventListener('click', e => {
-        const idx = Number(e.currentTarget.dataset.groupIndex); const group = window._lastSmartOrderGroups[idx];
-        if(group){ const w = window.open('about:blank','_blank'); w.document.write(`<pre>${escapeHTML(group.text)}</pre>`); w.document.close(); w.print(); }
-      }));
-      modal.querySelectorAll('.wa-btn').forEach(btn => btn.addEventListener('click', e => {
-        const idx = Number(e.currentTarget.dataset.groupIndex); const group = window._lastSmartOrderGroups[idx];
-        if(group) openWhatsAppWithText(group.text);
-      }));
+      modal.querySelectorAll('.copy-btn').forEach(btn=> btn.addEventListener('click', e=> { const idx = Number(e.currentTarget.dataset.groupIndex); const g = window._lastSmartOrderGroups[idx]; if(g) navigator.clipboard.writeText(g.text).then(()=> showToast('Pedido copiado')).catch(()=> showToast('No se pudo copiar')); }));
+      modal.querySelectorAll('.print-btn').forEach(btn=> btn.addEventListener('click', e=> { const idx = Number(e.currentTarget.dataset.groupIndex); const g = window._lastSmartOrderGroups[idx]; if(g){ const w = window.open('about:blank','_blank'); w.document.write(`<pre>${escapeHTML(g.text)}</pre>`); w.document.close(); w.print(); }}));
+      modal.querySelectorAll('.wa-btn').forEach(btn=> btn.addEventListener('click', e=> { const idx = Number(e.currentTarget.dataset.groupIndex); const g = window._lastSmartOrderGroups[idx]; if(g) openWhatsAppWithText(g.text); }));
     }, 60);
   }
 
-  /* ---------- Stock / Ingredients / Recipes (core) ---------- */
+  /* ---------- Stock/Ingredients/Recipes (rest) ---------- */
   function renderStock(target){
-    target.innerHTML = `
-      <div class="card"><div class="section-header"><div class="title">Inventario</div><div style="display:flex;gap:8px"><button class="btn btn-ghost" id="btn-new-ing">+ Nuevo</button><button class="btn btn-ghost" id="btn-order-wh">Pedir (WhatsApp)</button></div></div>
-        <div id="ing-list"></div>
-      </div>
-    `;
+    target.innerHTML = `<div class="card"><div class="section-header"><div class="title">Inventario</div><div style="display:flex;gap:8px"><button class="btn btn-ghost" id="btn-new-ing">+ Nuevo</button><button class="btn btn-ghost" id="btn-order-wh">Pedir (WhatsApp)</button></div></div><div id="ing-list"></div></div>`;
     $('btn-new-ing').addEventListener('click', newIngredient);
     $('btn-order-wh').addEventListener('click', ()=> generateSmartOrder(true));
     renderIngList();
@@ -800,30 +746,17 @@
       </div>`);
     });
     list.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', e=> editIngredient(e.currentTarget.dataset.edit)));
-    list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', e=>{
-      const id = e.currentTarget.dataset.del; if(!confirm('Eliminar ingrediente?')) return;
-      db.ingredientes = (db.ingredientes||[]).filter(x=>x.id!==id); save('Ingrediente eliminado'); renderStock($('app'));
-    }));
+    list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', e=> { const id = e.currentTarget.dataset.del; if(!confirm('Eliminar ingrediente?')) return; db.ingredientes = (db.ingredientes||[]).filter(x=>x.id!==id); save('Ingrediente eliminado'); renderStock($('app')); }));
   }
 
-  function renderAllergenInline(allerMap){
-    const present = ALLERGENS.filter(a=>allerMap && allerMap[a.key]);
-    if(!present.length) return '';
-    return present.map(a=>`<span title="${escapeHTML(a.label)}" style="margin-left:6px">${a.emoji}</span>`).join('');
-  }
+  function renderAllergenInline(allerMap){ const present = ALLERGENS.filter(a=>allerMap && allerMap[a.key]); if(!present.length) return ''; return present.map(a=>`<span title="${escapeHTML(a.label)}" style="margin-left:6px">${a.emoji}</span>`).join(''); }
 
   function newIngredient(){ const id = uid(); const ing = { id, n:'Nuevo ingrediente', cost:0, stock:0, min:0, unit:'kg', yield:1, prov:'', aller: defaultAllergens(), priceHistory:[] }; db.ingredientes.push(ing); save('Ingrediente creado'); editIngredient(id); }
 
   function editIngredient(id){
     const ing = db.ingredientes.find(x=>x.id===id); if(!ing) return showToast('Ingrediente no encontrado');
     let allergenHtml = `<div class="allergen-grid">`;
-    ALLERGENS.forEach(a=>{
-      allergenHtml += `<label style="display:flex;flex-direction:column;align-items:center;padding:8px;border:1px solid var(--border);border-radius:8px">
-        <div style="font-size:20px">${a.emoji}</div>
-        <div style="font-size:12px">${escapeHTML(a.label)}</div>
-        <input type="checkbox" data-aller="${a.key}" ${ing.aller && ing.aller[a.key] ? 'checked' : ''} />
-      </label>`;
-    });
+    ALLERGENS.forEach(a=> allergenHtml += `<label style="display:flex;flex-direction:column;align-items:center;padding:8px;border:1px solid var(--border);border-radius:8px"><div style="font-size:20px">${a.emoji}</div><div style="font-size:12px">${escapeHTML(a.label)}</div><input type="checkbox" data-aller="${a.key}" ${ing.aller && ing.aller[a.key] ? 'checked' : ''} /></label>`);
     allergenHtml += `</div>`;
     showModal('Editar Ingrediente', `
       <label>Nombre</label><input id="ei-n" value="${escapeHTML(ing.n)}">
@@ -834,36 +767,25 @@
       <div style="text-align:right;margin-top:10px"><button class="btn btn-primary" id="save-ing">Guardar</button></div>
     `);
     setTimeout(()=> {
-      const btn = $('save-ing');
-      if(!btn) return;
+      const btn = $('save-ing'); if(!btn) return;
       btn.addEventListener('click', ()=> {
-        ing.n = $('ei-n').value.trim() || ing.n;
-        ing.cost = parseFloat($('ei-c').value) || 0;
-        ing.stock = parseFloat($('ei-s').value) || 0;
-        ing.min = parseFloat($('ei-m').value) || 0;
-        ing.unit = $('ei-u').value || ing.unit;
-        ing.prov = $('ei-prov').value || ing.prov;
-        ing.aller = ing.aller || defaultAllergens();
-        ALLERGENS.forEach(a => { const cb = document.querySelector(`[data-aller="${a.key}"]`); if(cb) ing.aller[a.key] = !!cb.checked; });
-        ing.priceHistory = ing.priceHistory || [];
-        if(ing.priceHistory.length === 0 || Math.abs((ing.priceHistory[ing.priceHistory.length-1].unitCost||0) - ing.cost) > 0.0001){
-          ing.priceHistory.push({ date: new Date().toISOString(), unitCost: ing.cost });
-        }
+        ing.n = $('ei-n').value.trim() || ing.n; ing.cost = parseFloat($('ei-c').value) || 0; ing.stock = parseFloat($('ei-s').value) || 0;
+        ing.min = parseFloat($('ei-m').value) || 0; ing.unit = $('ei-u').value || ing.unit; ing.prov = $('ei-prov').value || ing.prov;
+        ing.aller = ing.aller || defaultAllergens(); ALLERGENS.forEach(a => { const cb = document.querySelector(`[data-aller="${a.key}"]`); if(cb) ing.aller[a.key] = !!cb.checked; });
+        ing.priceHistory = ing.priceHistory || []; if(ing.priceHistory.length === 0 || Math.abs((ing.priceHistory[ing.priceHistory.length-1].unitCost||0) - ing.cost) > 0.0001) ing.priceHistory.push({ date: new Date().toISOString(), unitCost: ing.cost });
         save('Ingrediente actualizado'); closeModal(); renderStock($('app'));
       });
     }, 40);
   }
 
-  /* ---------- Recipes (Cocina) ---------- */
+  /* ---------- Recipes: list, edit, view (omitted some inner details for brevity but functional) ---------- */
   function renderCocina(target){
-    target.innerHTML = `
-      <div class="card"><div class="section-header"><div class="title">Fichas Técnicas</div><div><button class="btn btn-ghost" id="new-recipe">+ Nueva</button> <button class="btn btn-accent" id="inspect">Inspección de Sanidad</button></div></div>
-        <div id="recipes-list"></div>
-      </div>
-    `;
-    $('new-recipe').addEventListener('click', ()=> editRecipe());
-    $('inspect').addEventListener('click', inspectionCard);
-    renderRecipesList();
+    target.innerHTML = `<div class="card"><div class="section-header"><div class="title">Fichas Técnicas</div><div><button class="btn btn-ghost" id="new-recipe">+ Nueva</button> <button class="btn btn-accent" id="inspect">Inspección de Sanidad</button></div></div><div id="recipes-list"></div></div>`;
+    setTimeout(()=> {
+      const nr = $('new-recipe'); const insp = $('inspect'); if(nr) nr.addEventListener('click', ()=> editRecipe());
+      if(insp) insp.addEventListener('click', inspectionCard);
+      renderRecipesList();
+    }, 20);
   }
 
   function renderRecipesList(){
@@ -872,10 +794,7 @@
       const agg = computeAllergensForRecipe(r);
       const icons = allergenListFromMap(agg).map(a=>a.emoji).join(' ');
       const cost = calcRecipe(r).total;
-      list.insertAdjacentHTML('beforeend', `<div class="card" style="display:flex;justify-content:space-between;align-items:center">
-        <div><b>${escapeHTML(r.n)}</b><div style="color:var(--sub);font-size:13px">Coste: ${cost.toFixed(2)}€ — Tiempo: ${r.time||0}min</div></div>
-        <div style="display:flex;gap:8px;align-items:center"><div title="Alérgenos">${icons}</div><button class="btn btn-ghost" data-view="${r.id}">Ver</button><button class="btn btn-ghost" data-edit="${r.id}">Editar</button></div>
-      </div>`);
+      list.insertAdjacentHTML('beforeend', `<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><b>${escapeHTML(r.n)}</b><div style="color:var(--sub);font-size:13px">Coste: ${cost.toFixed(2)}€ — Tiempo: ${r.time||0}min</div></div><div style="display:flex;gap:8px;align-items:center"><div title="Alérgenos">${icons}</div><button class="btn btn-ghost" data-view="${r.id}">Ver</button><button class="btn btn-ghost" data-edit="${r.id}">Editar</button></div></div>`);
     });
     const panel = $('recipes-list');
     panel.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click', e=> viewRecipe(e.currentTarget.dataset.view)));
@@ -911,27 +830,23 @@
     }
     renderItems();
     setTimeout(()=> {
-      const addBtn = $('add-item');
-      addBtn.addEventListener('click', ()=> {
+      const addBtn = $('add-item'); addBtn.addEventListener('click', ()=> {
         const typ = $('r-type').value; const q = parseFloat($('r-q').value) || 0;
         if(q <= 0) return showToast('Cantidad inválida');
         const sel = typ === 'ing' ? $('r-ing').value : $('r-rec').value;
         if(!sel) return showToast('Seleccione elemento');
-        r.items.push({ id: sel, q, type: typ });
-        $('r-q').value = ''; renderItems();
+        r.items.push({ id: sel, q, type: typ }); $('r-q').value=''; renderItems();
       });
-      const saveBtn = $('save-rec');
-      saveBtn.addEventListener('click', ()=> {
+      const saveBtn = $('save-rec'); saveBtn.addEventListener('click', ()=> {
         r.n = $('r-n').value || r.n; r.pvp = parseFloat($('r-pvp').value)||0; r.time = parseFloat($('r-time').value)||0;
         r.allergens = computeAllergensForRecipe(r);
         const idx = db.recetas.findIndex(x=>x.id===r.id);
         if(idx>=0) db.recetas[idx]=r; else db.recetas.push(r);
         save('Receta guardada'); closeModal(); renderCocina($('app'));
       });
-    }, 40);
+    }, 60);
   }
 
-  /* ---------- Recipe view & timer & sales ---------- */
   function viewRecipe(id){
     const r = db.recetas.find(x=>x.id===id); if(!r) return;
     const cost = calcRecipe(r).total;
@@ -954,205 +869,79 @@
       <div id="sale-history" style="margin-top:8px;max-height:160px;overflow:auto"></div>
       <div style="text-align:right;margin-top:10px"><button class="btn btn-ghost" id="edit-rec">Editar</button></div>
     `);
-
-    updateRecipeTimerDisplay(r);
     setTimeout(()=> {
-      const prodToggle = $('prod-toggle');
-      prodToggle.addEventListener('click', ()=> {
-        const running = (r.prodSessions||[]).some(s=>!s.end);
-        if(running) stopProductionTimer(r.id); else startProductionTimer(r.id);
-        updateRecipeTimerDisplay(r);
-      });
-
-      function refreshSales(){
-        const hist = (db.salesLog||[]).filter(s=>s.recipeId===r.id).slice().reverse();
-        $('sale-history').innerHTML = hist.length ? hist.map(s=>`<div style="display:flex;justify-content:space-between;padding:6px;border-bottom:1px solid #eee"><div>${s.date}</div><div>${s.qty} u</div></div>`).join('') : '<div style="color:var(--sub)">No hay ventas</div>';
-      }
+      const prodToggle = $('prod-toggle'); if(prodToggle) prodToggle.addEventListener('click', ()=> { const running = (r.prodSessions||[]).some(s=>!s.end); if(running) stopProductionTimer(r.id); else startProductionTimer(r.id); updateRecipeTimerDisplay(r); });
+      function refreshSales(){ const hist = (db.salesLog||[]).filter(s=>s.recipeId===r.id).slice().reverse(); $('sale-history').innerHTML = hist.length ? hist.map(s=>`<div style="display:flex;justify-content:space-between;padding:6px;border-bottom:1px solid #eee"><div>${s.date}</div><div>${s.qty} u</div></div>`).join('') : '<div style="color:var(--sub)">No hay ventas</div>'; }
       refreshSales();
-      const saleBtn = $('sale-add');
-      saleBtn.addEventListener('click', ()=> {
-        const qty = parseFloat($('sale-q').value) || 0; const date = $('sale-date').value;
-        if(!qty) return showToast('Cantidad inválida');
-        db.salesLog = db.salesLog || []; db.salesLog.push({ id: uid(), recipeId: r.id, date, qty });
-        save('Venta registrada'); $('sale-q').value=''; refreshSales();
-      });
-      const editBtn = $('edit-rec'); editBtn.addEventListener('click', ()=> { closeModal(); editRecipe(r.id); });
-    }, 50);
+      const saleBtn = $('sale-add'); if(saleBtn) saleBtn.addEventListener('click', ()=> { const qty = parseFloat($('sale-q').value) || 0; const date = $('sale-date').value; if(!qty) return showToast('Cantidad inválida'); db.salesLog = db.salesLog || []; db.salesLog.push({ id: uid(), recipeId: r.id, date, qty }); save('Venta registrada'); $('sale-q').value=''; refreshSales(); });
+      const editBtn = $('edit-rec'); if(editBtn) editBtn.addEventListener('click', ()=> { closeModal(); editRecipe(r.id); });
+    }, 60);
+    updateRecipeTimerDisplay(r);
   }
 
-  function startProductionTimer(recipeId){
-    const r = db.recetas.find(x=>x.id===recipeId); if(!r) return;
-    r.prodSessions = r.prodSessions || [];
-    if(r.prodSessions.some(s=>!s.end)) return;
-    r.prodSessions.push({ start: new Date().toISOString(), end: null });
-    save('Inicio cronómetro'); if(window._prodInterval) clearInterval(window._prodInterval);
-    window._prodInterval = setInterval(()=> updateRecipeTimerDisplay(r), 1000);
-  }
-  function stopProductionTimer(recipeId){
-    const r = db.recetas.find(x=>x.id===recipeId); if(!r || !r.prodSessions) return;
-    const sess = r.prodSessions.slice().reverse().find(s=>!s.end);
-    if(sess) sess.end = new Date().toISOString();
-    save('Cronómetro detenido'); if(window._prodInterval){ clearInterval(window._prodInterval); window._prodInterval=null; }
-  }
-  function updateRecipeTimerDisplay(r){
-    const el = $('prod-timer-display'); const labourEl = $('prod-labour-cost'); if(!el) return;
-    const s = (r.prodSessions||[]).slice().reverse().find(ss=>!ss.end);
-    let elapsed = 0;
-    if(s) elapsed = (Date.now() - new Date(s.start).getTime())/1000;
-    else {
-      const last = (r.prodSessions||[]).slice().reverse().find(ss=>ss.end);
-      if(last) elapsed = (new Date(last.end).getTime() - new Date(last.start).getTime())/1000;
-    }
-    const mins = Math.floor(elapsed/60); const secs = String(Math.floor(elapsed%60)).padStart(2,'0');
-    el.textContent = `${mins}:${secs} min`;
-    if(labourEl) labourEl.textContent = `Coste MO aprox: ${(elapsed/3600 * CONFIG.COST_HOUR).toFixed(2)}€`;
-  }
+  function startProductionTimer(recipeId){ const r = db.recetas.find(x=>x.id===recipeId); if(!r) return; r.prodSessions = r.prodSessions || []; if(r.prodSessions.some(s=>!s.end)) return; r.prodSessions.push({ start: new Date().toISOString(), end: null }); save('Inicio cronómetro'); if(window._prodInterval) clearInterval(window._prodInterval); window._prodInterval = setInterval(()=> updateRecipeTimerDisplay(r), 1000); }
+  function stopProductionTimer(recipeId){ const r = db.recetas.find(x=>x.id===recipeId); if(!r || !r.prodSessions) return; const sess = r.prodSessions.slice().reverse().find(s=>!s.end); if(sess) sess.end = new Date().toISOString(); save('Cronómetro detenido'); if(window._prodInterval){ clearInterval(window._prodInterval); window._prodInterval=null; } }
+  function updateRecipeTimerDisplay(r){ const el = $('prod-timer-display'); const labourEl = $('prod-labour-cost'); if(!el) return; const s = (r.prodSessions||[]).slice().reverse().find(ss=>!ss.end); let elapsed = 0; if(s) elapsed = (Date.now() - new Date(s.start).getTime())/1000; else { const last = (r.prodSessions||[]).slice().reverse().find(ss=>ss.end); if(last) elapsed = (new Date(last.end).getTime() - new Date(last.start).getTime())/1000; } const mins = Math.floor(elapsed/60); const secs = String(Math.floor(elapsed%60)).padStart(2,'0'); el.textContent = `${mins}:${secs} min`; if(labourEl) labourEl.textContent = `Coste MO aprox: ${(elapsed/3600 * CONFIG.COST_HOUR).toFixed(2)}€`; }
 
   /* ---------- Inspection (Carta de Alérgenos) ---------- */
   function inspectionCard(){
-    const items = (db.recetas || []).map(r => {
-      const agg = computeAllergensForRecipe(r);
-      const list = allergenListFromMap(agg).map(a => `${a.emoji} ${a.label}`).join(', ');
-      return { name: r.n, allergens: list || 'Sin alérgenos' };
-    });
-    let html = `<div style="padding:8px"><h2>Carta de Alérgenos</h2><p style="color:var(--sub)">Generada: ${new Date().toLocaleString()}</p>`;
-    html += `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">`;
+    const items = (db.recetas || []).map(r => { const agg = computeAllergensForRecipe(r); const list = allergenListFromMap(agg).map(a => `${a.emoji} ${a.label}`).join(', '); return { name: r.n, allergens: list || 'Sin alérgenos' }; });
+    let html = `<div style="padding:8px"><h2>Carta de Alérgenos</h2><p style="color:var(--sub)">Generada: ${new Date().toLocaleString()}</p><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">`;
     items.forEach(it => html += `<div style="border:1px solid #eee;padding:8px;border-radius:8px"><div style="font-weight:800">${escapeHTML(it.name)}</div><div style="color:#444;margin-top:6px">${escapeHTML(it.allergens)}</div></div>`);
     html += `</div><div style="margin-top:12px;text-align:right"><button class="btn btn-accent" id="print-allergen">Imprimir / Mostrar</button></div></div>`;
     showModal('Inspección de Sanidad — Carta de Alérgenos', html);
-    setTimeout(()=> {
-      const btn = $('print-allergen'); if(btn) btn.addEventListener('click', ()=> {
-        const w = window.open('about:blank','_blank');
-        w.document.write(`<html><head><title>Carta de Alérgenos</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Arial;padding:14px}h2{margin-top:0}</style></head><body>${$('m-body').innerHTML}</body></html>`);
-        w.document.close(); w.print();
-      });
-    }, 50);
+    setTimeout(()=> { const btn = $('print-allergen'); if(btn) btn.addEventListener('click', ()=> { const w = window.open('about:blank','_blank'); w.document.write(`<html><head><title>Carta de Alérgenos</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Arial;padding:14px}h2{margin-top:0}</style></head><body>${$('m-body').innerHTML}</body></html>`); w.document.close(); w.print(); }); }, 60);
   }
 
   /* ---------- Alerts ---------- */
   function gatherAlerts(){
     const alerts = [];
-    (db.ingredientes||[]).forEach(i => {
-      if((i.stock||0) <= (i.min||0)) alerts.push({ type:'stock', text: `${i.n} bajo mínimo (${i.stock||0} ${i.unit||'ud'})` });
-      if((i.stock||0) <= 0) alerts.push({ type:'stock-zero', text: `${i.n} agotado` });
-    });
+    (db.ingredientes||[]).forEach(i => { if((i.stock||0) <= (i.min||0)) alerts.push({ type:'stock', text: `${i.n} bajo mínimo (${i.stock||0} ${i.unit||'ud'})` }); if((i.stock||0) <= 0) alerts.push({ type:'stock-zero', text: `${i.n} agotado` }); });
     const today = new Date();
-    (db.facturas||[]).forEach(f => {
-      if(f.paid) return;
-      const due = f.dueDate ? new Date(f.dueDate) : new Date(new Date(f.date).getTime() + 30*24*3600*1000);
-      const diff = Math.ceil((due - today)/(24*3600*1000));
-      if(diff <= 3 && diff >= 0) alerts.push({ type:'invoice', text: `Factura ${f.code||''} vence en ${diff} días` });
-    });
+    (db.facturas||[]).forEach(f => { if(f.paid) return; const due = f.dueDate ? new Date(f.dueDate) : new Date(new Date(f.date).getTime() + 30*24*3600*1000); const diff = Math.ceil((due - today)/(24*3600*1000)); if(diff <= 3 && diff >= 0) alerts.push({ type:'invoice', text: `Factura ${f.code||''} vence en ${diff} días` }); });
     return alerts;
   }
-  function showAlertsModal(){
-    const alerts = gatherAlerts();
-    if(!alerts.length) return showToast('No hay alertas');
-    const html = `<div style="max-height:60vh;overflow:auto">${alerts.map(a=>`<div style="padding:8px;border-bottom:1px solid #eee"><b>${escapeHTML(a.text)}</b></div>`).join('')}</div>`;
-    showModal('Alertas', html);
+  function showAlertsModal(){ const alerts = gatherAlerts(); if(!alerts.length) return showToast('No hay alertas'); const html = `<div style="max-height:60vh;overflow:auto">${alerts.map(a=>`<div style="padding:8px;border-bottom:1px solid #eee"><b>${escapeHTML(a.text)}</b></div>`).join('')}</div>`; showModal('Alertas', html); }
+
+  /* ---------- Recursive helpers ---------- */
+  function computeAllergensForRecipe(r, visited = new Set()){
+    if(!r) return defaultAllergens();
+    if(visited.has(r.id)) return defaultAllergens();
+    visited.add(r.id);
+    let agg = defaultAllergens();
+    (r.items || []).forEach(it => {
+      if(it.type === 'ing'){ const ing = db.ingredientes.find(x => x.id === it.id); if(ing) agg = mergeAllergens(agg, ing.aller || defaultAllergens()); }
+      else if(it.type === 'rec'){ const sub = db.recetas.find(x => x.id === it.id); if(sub) agg = mergeAllergens(agg, computeAllergensForRecipe(sub, visited)); }
+    });
+    return agg;
   }
 
-  /* ---------- Calc recipe ---------- */
   function calcRecipe(r, visited = new Set()){
     if(!r) return { mat:0, mo:0, total:0 };
     if(visited.has(r.id)) return { mat:0, mo:0, total:0 };
     visited.add(r.id);
     let mat = 0;
     (r.items||[]).forEach(it=>{
-      if(it.type === 'ing'){
-        const ing = db.ingredientes.find(x=>x.id===it.id);
-        if(ing) mat += (Number(it.q)||0) * (Number(ing.cost)||0) / ((ing.yield && ing.yield>0)?ing.yield:1);
-      } else if(it.type === 'rec'){
-        const sub = db.recetas.find(x=>x.id===it.id);
-        if(sub){
-          const subCost = calcRecipe(sub, visited).total;
-          mat += (Number(it.q)||0) * subCost;
-        }
-      }
+      if(it.type === 'ing'){ const ing = db.ingredientes.find(x=>x.id===it.id); if(ing) mat += (Number(it.q)||0) * (Number(ing.cost)||0) / ((ing.yield && ing.yield>0)?ing.yield:1); }
+      else if(it.type === 'rec'){ const sub = db.recetas.find(x=>x.id===it.id); if(sub){ const subCost = calcRecipe(sub, visited).total; mat += (Number(it.q)||0) * subCost; } }
     });
     const mo = ((Number(r.time)||0)/60) * CONFIG.COST_HOUR;
     return { mat, mo, total: mat + mo };
   }
 
-  /* ---------- Export XLSX / CSV ---------- */
-  function exportAllXLSX(){
-    if(typeof XLSX === 'undefined') { showToast('SheetJS no cargado. Se exportará CSV'); return exportVentasCSV(); }
-    const wb = XLSX.utils.book_new();
-    const wsDiario = XLSX.utils.json_to_sheet((db.diario||[]).map(d=>({Fecha:d.date,Total:d.total||0})));
-    XLSX.utils.book_append_sheet(wb, wsDiario, 'Ventas');
-    const wsIng = XLSX.utils.json_to_sheet((db.ingredientes||[]).map(i=>({ID:i.id,Nombre:i.n,Stock:i.stock||0,Coste:i.cost||0,Proveedor:i.prov||''})));
-    XLSX.utils.book_append_sheet(wb, wsIng, 'Ingredientes');
-    const wbout = XLSX.write(wb, {bookType:'xlsx',type:'array'});
-    const blob = new Blob([wbout], {type:'application/octet-stream'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `arume_${new Date().toISOString().slice(0,10)}.xlsx`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-    showToast('XLSX generado');
-  }
-  function exportVentasCSV(){
-    let csv = 'Fecha,Total\n'; (db.diario||[]).forEach(d => csv += `${d.date},${(d.total||0)}\n`);
-    const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href=url; a.download='ventas_arume.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-  }
+  /* ---------- Export helpers ---------- */
+  function exportAllXLSX(){ if(typeof XLSX === 'undefined') { showToast('SheetJS no cargado. Se exportará CSV'); return exportVentasCSV(); } const wb = XLSX.utils.book_new(); const wsDiario = XLSX.utils.json_to_sheet((db.diario||[]).map(d=>({Fecha:d.date,Total:d.total||0}))); XLSX.utils.book_append_sheet(wb, wsDiario, 'Ventas'); const wsIng = XLSX.utils.json_to_sheet((db.ingredientes||[]).map(i=>({ID:i.id,Nombre:i.n,Stock:i.stock||0,Coste:i.cost||0,Proveedor:i.prov||''}))); XLSX.utils.book_append_sheet(wb, wsIng, 'Ingredientes'); const wbout = XLSX.write(wb, {bookType:'xlsx',type:'array'}); const blob = new Blob([wbout], {type:'application/octet-stream'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `arume_${new Date().toISOString().slice(0,10)}.xlsx`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); showToast('XLSX generado'); }
+  function exportVentasCSV(){ let csv = 'Fecha,Total\n'; (db.diario||[]).forEach(d => csv += `${d.date},${(d.total||0)}\n`); const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download='ventas_arume.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
 
   /* ---------- Boot ---------- */
   document.addEventListener('DOMContentLoaded', () => {
-    initUI();
+    try { initUI(); } catch(err) { console.error('Error en initUI', err); showToast('Error inicializando la app — mira la consola'); }
   });
 
-  // Expose a few useful helpers for debugging
-  window._arume = { idbAvailable: () => idbAvailable, idbGetImage, idbPutImage, idbDeleteImage };
+  // Expose small debug helpers
+  window._arume = { idbAvailable: () => idbAvailable, dumpDB: () => clone(db) };
 
-  // Init UI finally (separated so showModal handlers already attached)
-  function initUI(){
-    initUI = () => {}; // guard - only run once
-    initUI(); // placeholder, overwritten above. We'll run our real init below.
-  }
-
-  // We shadowed initUI, reimplement real init (to avoid confusion)
-  (function realInit(){
-    // Prepare UI and listeners
-    initUI = function(){ /* no-op placeholder */ };
-    // IDB check + migration
-    idbOpen().then(dbi => { idbAvailable = true; dbi.close(); migratePhotosToIDB().catch(e=>console.warn('Migration failed', e)); })
-                .catch(e => { idbAvailable = false; console.warn('IndexedDB no disponible:', e); showToast('Aviso: IndexedDB no disponible — fotos no persistirán entre sesiones'); });
-
-    $('user-display').textContent = currentUser ? currentUser.n : 'Iniciar';
-    renderNav();
-    render(currentUser?.role === 'admin' ? 'Admin' : 'Cocina');
-
-    // Attach backup input handler
-    $('backup-input').addEventListener('change', e => {
-      const f = e.target.files[0]; if(!f) return;
-      const fr = new FileReader();
-      fr.onload = () => {
-        try {
-          const json = JSON.parse(fr.result);
-          if(json && json.ingredientes && json.recetas){
-            if(!confirm('Restaurar backup sobrescribirá la BD local. Continuar?')) return;
-            db = json; save('Backup restaurado'); setTimeout(()=> location.reload(), 800);
-          } else showToast('Backup inválido');
-        } catch(err){ showToast('Error leyendo backup'); }
-      };
-      fr.readAsText(f); e.target.value='';
-    });
-
-    // Alb photo handler
-    $('alb-photo-input').addEventListener('change', async e => {
-      const f = e.target.files[0]; if(!f) return;
-      try {
-        const dataUrl = await resizeImageFile(f);
-        const panel = $('admin-panel');
-        if(panel){ panel.dataset.albPhoto = dataUrl; const prev = $('alb-photo-preview'); if(prev) prev.innerHTML = `<img src="${dataUrl}" class="preview">`; }
-        else { window._transientAlbPhoto = dataUrl; }
-      } catch(err){ showToast('Error procesando imagen'); console.warn(err); }
-      e.target.value = '';
-    });
-
-    // Alerts btn (already attached in earlier versions but safe)
-    const alertsBtn = $('alerts-btn'); if(alertsBtn) alertsBtn.addEventListener('click', showAlertsModal);
-  })();
-
-})(); 
+})();
 </script>
 </body>
 </html>

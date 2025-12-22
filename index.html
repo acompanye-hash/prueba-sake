@@ -3,152 +3,1156 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>ARUME V52 · Financial Control</title>
+  <title>ARUME V52 · Financial Control (estable)</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
   <style>
-    :root {
-      --bg: #f8fafc; --paper: #ffffff; --text: #0f172a; --sub: #64748b;
-      --primary: #0f172a; --accent: #2563eb;
-      --success: #16a34a; --danger: #dc2626; --warn: #d97706;
-      --border: #e2e8f0; --radius: 12px;
+    :root{
+      --bg:#f8fafc; --paper:#fff; --text:#0f172a; --sub:#64748b;
+      --primary:#0f172a; --accent:#2563eb; --danger:#dc2626; --success:#16a34a;
+      --border:#e2e8f0; --radius:12px;
     }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 110px; min-height: 100vh; }
-
-    /* HEADER */
-    header { background: var(--paper); padding: 15px 20px; position: sticky; top: 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-    h1 { margin: 0; font-size: 1.3rem; font-weight: 900; letter-spacing: -0.5px; color: var(--primary); display:flex; align-items:center; gap:8px; }
-    .badge { padding: 6px 12px; border-radius: 99px; font-size: 0.75rem; background: #f1f5f9; color: var(--text); font-weight: 700; border: 1px solid var(--border); cursor: pointer; display: flex; align-items:center; gap:8px; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; } .dot.ok { background: var(--success); box-shadow: 0 0 6px var(--success); }
-
-    /* LAYOUT */
-    main { max-width: 900px; margin: 0 auto; padding: 20px; animation: fade 0.3s ease-out; }
-    @keyframes fade { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-
-    .card { background: var(--paper); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-    .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f8fafc; padding-bottom: 12px; margin-bottom: 15px; }
-    .title { font-size: 0.85rem; font-weight: 900; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
-    .row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; } .col { flex: 1; min-width: 140px; }
-
-    /* KPIs FINANCIEROS */
-    .kpi-row { display: flex; gap: 10px; margin-bottom: 15px; }
-    .kpi-card { flex:1; background: var(--primary); color: white; padding: 15px; border-radius: var(--radius); text-align: center; }
-    .kpi-val { font-size: 1.4rem; font-weight: 900; }
-    .kpi-lbl { font-size: 0.7rem; opacity: 0.8; text-transform: uppercase; margin-top: 4px; }
-
-    /* LISTAS & TABLAS */
-    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 100%; }
-    th { text-align: left; background: #f8fafc; color: var(--sub); padding: 12px 10px; font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-    td { padding: 14px 10px; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
-    tr:last-child td { border: none; }
-
-    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 10px; border-bottom: 1px solid #f1f5f9; transition: 0.1s; cursor: pointer; }
-    .list-item:active { background: #f1f5f9; }
-    .list-item:last-child { border: none; }
-
-    /* INPUTS */
-    label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--sub); margin-bottom: 5px; text-transform: uppercase; }
-    input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 15px; background: #fff; font-family: inherit; margin-bottom: 10px; outline: none; }
-    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #bfdbfe; }
-    .search-bar { background: #fff; border: 1px solid var(--border); margin-bottom: 15px; box-shadow: 0 4px 6px -2px rgba(0,0,0,0.03); padding: 10px; border-radius:10px; }
-
-    /* BOTONES */
-    .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; font-size: 1rem; text-align: center; margin-top: 5px; transition: 0.1s; display: inline-flex; justify-content:center; align-items:center; gap:8px; }
-    .btn:active { transform: scale(0.97); opacity: 0.9; }
-    .btn-primary { background: var(--primary); color: white; }
-    .btn-accent { background: var(--accent); color: white; }
-    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    .btn-danger { background: #fee2e2; color: var(--danger); }
-    .btn-sm { width: auto; padding: 8px 16px; font-size: 0.8rem; margin: 0; }
-
-    .status-btn { padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; cursor: pointer; border: none; transition: 0.2s; }
-    .status-btn.paid { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-    .status-btn.pending { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-
-    /* ALBARAN GRID */
-    .alb-row { display: flex; gap: 5px; margin-bottom: 8px; align-items: center; background: #fff; border: 1px solid #f1f5f9; padding: 5px; border-radius: 8px; }
-    .alb-row input { margin: 0; padding: 8px; font-size: 0.9rem; }
-    .alb-name { flex: 3; min-width: 120px; }
-    .alb-num { flex: 1; min-width: 50px; text-align: right; }
-
-    /* NAV */
-    nav { position: fixed; bottom: 0; width: 100%; background: rgba(255,255,255,0.96); backdrop-filter: blur(8px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; gap:4px; padding:6px; z-index:60; }
-    nav button { background: none; border: none; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--sub); font-size: 0.65rem; font-weight: 700; padding: 5px 8px; border-radius:8px; }
-    nav button.active { opacity: 1; color: var(--accent); transform: translateY(-3px); }
-    nav button svg { width: 26px; height: 26px; fill: currentColor; }
-
-    /* MODAL */
-    .hidden { display: none !important; }
-    .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 100; backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; }
-    .modal { background: white; width: 95%; max-width: 700px; max-height: 90vh; overflow-y: auto; padding: 25px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
-
-    /* PIN PAD */
-    #pin-screen { background: #0f172a; color: white; }
-    .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; max-width: 320px; margin-left: auto; margin-right: auto; }
-    .pin-btn { height: 75px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); font-size: 1.8rem; color: white; cursor: pointer; font-weight: 600; }
-    .pin-btn:active { background: rgba(255,255,255,0.2); }
-
-    /* TOAST */
-    #toast-container { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); z-index: 200; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-    .toast { background: #1e293b; color: white; padding: 14px 20px; border-radius: 12px; font-size: 0.95rem; font-weight: 600; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); animation: slideUp 0.3s ease forwards; pointer-events: auto; }
-    .toast.success { border-bottom: 4px solid var(--success); }
-    .toast.error { border-bottom: 4px solid var(--danger); }
-    @keyframes slideUp { from{opacity:0; transform:translateY(20px) translateX(-50%)} to{opacity:1; transform:translateY(0) translateX(-50%)} }
-
-    /* small helpers */
-    .matrix-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; }
-    .matrix-box { padding:12px; border-radius:8px; background:#f8fafc; text-align:center; }
-
-    /* small responsive */
-    @media (max-width:520px){
-      .col { min-width: 120px; }
-      .pin-grid { gap:10px }
-      .pin-btn { height:64px; font-size:1.4rem }
-    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);padding-bottom:120px}
+    header{background:var(--paper);padding:12px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+    h1{margin:0;font-size:1.1rem;font-weight:900}
+    .badge{padding:6px 10px;border-radius:999px;background:#f1f5f9;border:1px solid var(--border);font-weight:700;cursor:pointer}
+    main{max-width:980px;margin:18px auto;padding:0 18px}
+    .card{background:var(--paper);border-radius:var(--radius);padding:16px;margin-bottom:16px;border:1px solid var(--border)}
+    .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .title{font-weight:900;color:var(--primary);text-transform:uppercase;font-size:0.8rem}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .col{flex:1;min-width:140px}
+    input,select,textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:#fff}
+    .btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:800}
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-accent{background:var(--accent);color:#fff}
+    .btn-ghost{background:transparent;border:1px solid var(--border)}
+    .btn-sm{padding:6px 10px;font-size:0.85rem;border-radius:8px}
+    nav{position:fixed;bottom:0;width:100%;background:rgba(255,255,255,0.96);border-top:1px solid var(--border);display:flex;gap:6px;justify-content:space-around;padding:8px;z-index:60}
+    nav button{background:none;border:none;color:var(--sub);font-weight:800;display:flex;flex-direction:column;align-items:center}
+    .overlay{position:fixed;inset:0;background:rgba(15,23,42,0.7);display:flex;align-items:center;justify-content:center;z-index:200}
+    .overlay.hidden{ display:none !important; } /* ensure hidden truly hides overlay */
+    .modal{background:white;width:95%;max-width:900px;max-height:92vh;overflow:auto;border-radius:14px;padding:18px;box-shadow:0 10px 30px rgba(2,6,23,0.2)}
+    .allergen-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+    .toast{position:fixed;bottom:140px;left:50%;transform:translateX(-50%);background:#0f172a;color:white;padding:10px 14px;border-radius:10px;z-index:400}
+    pre{white-space:pre-wrap;word-wrap:break-word}
+    img.preview { max-width:140px; border-radius:8px; border:1px solid #eee; }
+    table { border-collapse: collapse; width: 100%; }
+    table th, table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; text-align: left; font-size: 0.9rem; }
   </style>
 </head>
 <body>
   <div id="toast-container" aria-live="polite"></div>
-  <input type="file" id="backup-input" style="display:none" accept=".json,application/json">
 
   <header>
-    <h1>ARUME <span style="font-size:0.6em; opacity:0.6; font-weight:400">V52</span></h1>
-    <button id="user-display" class="badge" aria-label="Usuario actual">
-      <div id="sync-dot" class="dot" aria-hidden="true"></div> <span id="user-name">...</span>
-    </button>
+    <h1>ARUME V52 <small style="opacity:.6;font-weight:400">· Control & Cocina</small></h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="alerts-btn" class="badge">ALERTAS</button>
+      <button id="user-display" class="badge">Usuario</button>
+    </div>
   </header>
 
-  <main id="app" role="main"></main>
-  <nav id="navbar" role="navigation" aria-label="Navegación principal"></nav>
+  <main id="app"></main>
+
+  <nav id="navbar"></nav>
 
   <div id="modal-overlay" class="overlay hidden" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-title">
-      <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
-        <h3 id="m-title" style="margin:0; font-size:1.2rem; font-weight:900; color:var(--primary)"></h3>
-        <button id="modal-close" style="background:none;border:none;font-size:2rem;cursor:pointer;color:var(--sub);line-height:1" aria-label="Cerrar">&times;</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 id="m-title" style="margin:0"></h3>
+        <button id="modal-close" class="btn btn-ghost" aria-label="Cerrar">✕</button>
       </div>
       <div id="m-body"></div>
     </div>
   </div>
 
-  <div id="pin-screen" class="overlay" style="opacity:1" aria-hidden="false">
-    <div class="modal" style="text-align:center; background:transparent; box-shadow:none; color:white">
-      <h2 style="font-size:3rem; margin:0; letter-spacing:2px; font-weight:900">ARUME</h2>
-      <p style="opacity:0.6; margin-bottom:40px; letter-spacing:1px; text-transform:uppercase">Sistema de Gestión Integral</p>
-      <div id="pin-display" style="font-size:3rem; font-weight:800; letter-spacing:15px; min-height:60px">****</div>
-      <div class="pin-grid" id="pin-grid">
-        <button class="pin-btn" data-num="1">1</button><button class="pin-btn" data-num="2">2</button><button class="pin-btn" data-num="3">3</button>
-        <button class="pin-btn" data-num="4">4</button><button class="pin-btn" data-num="5">5</button><button class="pin-btn" data-num="6">6</button>
-        <button class="pin-btn" data-num="7">7</button><button class="pin-btn" data-num="8">8</button><button class="pin-btn" data-num="9">9</button>
-        <button class="pin-btn" id="pin-clear" style="color:var(--danger); border-color:rgba(239,68,68,0.3)">C</button>
-        <button class="pin-btn" data-num="0">0</button>
-        <button class="pin-btn" id="pin-ok" style="background:var(--success); border:none; color:#022c22">OK</button>
-      </div>
-    </div>
-  </div>
+  <input type="file" id="backup-input" accept=".json" style="display:none">
+  <input type="file" id="alb-photo-input" accept="image/*" capture="environment" style="display:none">
 
-  <script src="app.js" defer></script>
+<script>
+/*
+  ARUME V52 — Full consolidated file
+  Goals:
+  - Keep all features (albaranes, fotos in IDB, recetas, alérgenos, cronómetro, pedido inteligente, export XLSX)
+  - Fix modal overlay stuck bug and make modal accessible (ESC and click outside to close)
+  - Harden IDB usage with availability flag and fallbacks
+  - Avoid inline event handlers and unsafe innerHTML usage (escape user input)
+  - Delete images from IDB when albarán removed
+*/
+
+(() => {
+  'use strict';
+
+  /* ---------- Config ---------- */
+  const CONFIG = {
+    COST_HOUR: 15,
+    SAVE_DEBOUNCE_MS: 300,
+    PRICE_FLAG_PERCENT: 5,
+    IMG_MAX_WIDTH: 1000,
+    IMG_QUALITY: 0.75
+  };
+
+  const ALLERGENS = [
+    { key: 'gluten',  label: 'Gluten', emoji: '🌾' },
+    { key: 'crust',   label: 'Crustáceos', emoji: '🦐' },
+    { key: 'moll',    label: 'Moluscos', emoji: '🐚' },
+    { key: 'eggs',    label: 'Huevos', emoji: '🥚' },
+    { key: 'fish',    label: 'Pescado', emoji: '🐟' },
+    { key: 'peanuts', label: 'Cacahuete', emoji: '🥜' },
+    { key: 'soy',     label: 'Soja', emoji: '🌱' },
+    { key: 'milk',    label: 'Leche', emoji: '🥛' },
+    { key: 'celery',  label: 'Apio', emoji: '🥬' },
+    { key: 'mustard', label: 'Mostaza', emoji: '🟡' },
+    { key: 'sesame',  label: 'Sésamo', emoji: '🌾' },
+    { key: 'sulph',   label: 'Sulfitos', emoji: '⚗️' },
+    { key: 'lupin',   label: 'Altramuz', emoji: '🌰' },
+    { key: 'nuts',    label: 'Frutos secos', emoji: '🌰' }
+  ];
+
+  const DB_INIT = {
+    users: [{id:'u1', n:'Gerencia', pin:'0150', role:'admin'}, {id:'u2', n:'Cocina', pin:'1111', role:'staff'}],
+    ingredientes: [],
+    recetas: [],
+    proveedores: [{n:'Makro'}, {n:'Tokyo-ya'}, {n:'Frutas Daniel'}],
+    albaranes: [], facturas: [], diario: [], mermas: [], salesLog: [], fixedExpenses: [], lastSync: 0
+  };
+
+  /* ---------- Helpers ---------- */
+  const $ = id => document.getElementById(id);
+  const uid = ()=> (crypto?.randomUUID?.() || Date.now().toString(36)+Math.random().toString(36).slice(2));
+  const clone = v => (typeof structuredClone === 'function') ? structuredClone(v) : JSON.parse(JSON.stringify(v));
+  function safeGet(k){ try{ const s=localStorage.getItem(k); return s?JSON.parse(s):null }catch(e){console.warn(e); return null} }
+  function safeSet(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true }catch(e){console.warn(e); return false } }
+  function showToast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); }
+  function escapeHTML(s=''){ return String(s).replace(/[&<>"'`]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;',"`":'&#96;'}[ch])); }
+  function formatMoney(v){ return Number(v||0).toFixed(2) + '€'; }
+
+  function defaultAllergens(){ const a={}; ALLERGENS.forEach(x=>a[x.key]=false); return a; }
+  function mergeAllergens(a,b){ const out={}; ALLERGENS.forEach(x=> out[x.key]= !!((a&&a[x.key]) || (b&&b[x.key])); ); return out; }
+  function mergeAllergens(mapA, mapB){
+    const out = {};
+    ALLERGENS.forEach(a => out[a.key] = !!( (mapA && mapA[a.key]) || (mapB && mapB[a.key]) ));
+    return out;
+  }
+
+  function allergenListFromMap(map){
+    return ALLERGENS.filter(a => map && map[a.key]).map(a => ({key:a.key,label:a.label,emoji:a.emoji}));
+  }
+
+  /* ---------- State ---------- */
+  let db = safeGet('arume_v52') || clone(DB_INIT);
+  let currentUser = safeGet('arume_user') || null;
+  let charts = {};
+  let idbAvailable = true;
+
+  /* ---------- Save (debounced) ---------- */
+  let saveTimer = null;
+  function save(msg){
+    if(saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(()=>{ db.lastSync = Date.now(); safeSet('arume_v52', db); if(msg) showToast(msg); }, CONFIG.SAVE_DEBOUNCE_MS);
+  }
+
+  /* ---------- IndexedDB (images) ---------- */
+  function idbOpen(){
+    return new Promise((resolve, reject) => {
+      if(!('indexedDB' in window)) return reject(new Error('IndexedDB no disponible'));
+      const r = indexedDB.open('arume_images', 1);
+      r.onupgradeneeded = e => {
+        const idb = e.target.result;
+        if(!idb.objectStoreNames.contains('imgs')) idb.createObjectStore('imgs');
+      };
+      r.onsuccess = e => resolve(e.target.result);
+      r.onerror = e => reject(e.target.error);
+    });
+  }
+
+  async function idbPutImage(key, dataUrl){
+    if(!idbAvailable) throw new Error('IndexedDB no disponible');
+    const dbi = await idbOpen();
+    return new Promise((resolve, reject) => {
+      const tx = dbi.transaction('imgs','readwrite');
+      const store = tx.objectStore('imgs');
+      const r = store.put(dataUrl, key);
+      r.onsuccess = () => resolve(true);
+      r.onerror = e => reject(e.target.error);
+    });
+  }
+
+  async function idbGetImage(key){
+    if(!idbAvailable) return null;
+    const dbi = await idbOpen();
+    return new Promise((resolve, reject) => {
+      const tx = dbi.transaction('imgs','readonly');
+      const store = tx.objectStore('imgs');
+      const r = store.get(key);
+      r.onsuccess = e => resolve(e.target.result || null);
+      r.onerror = e => reject(e.target.error);
+    });
+  }
+
+  async function idbDeleteImage(key){
+    if(!idbAvailable) return false;
+    const dbi = await idbOpen();
+    return new Promise((resolve, reject) => {
+      const tx = dbi.transaction('imgs','readwrite');
+      const store = tx.objectStore('imgs');
+      const r = store.delete(key);
+      r.onsuccess = () => resolve(true);
+      r.onerror = e => reject(e.target.error);
+    });
+  }
+
+  /* ---------- Image resize ---------- */
+  function resizeImageFile(file, maxWidth = CONFIG.IMG_MAX_WIDTH, quality = CONFIG.IMG_QUALITY){
+    return new Promise((res, rej) => {
+      if(!file.type.startsWith('image/')) return rej(new Error('No es imagen'));
+      const fr = new FileReader();
+      fr.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const scale = Math.min(1, maxWidth / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          res(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = rej;
+        img.src = e.target.result;
+      };
+      fr.onerror = rej;
+      fr.readAsDataURL(file);
+    });
+  }
+
+  /* ---------- WhatsApp helper ---------- */
+  function openWhatsAppWithText(text){
+    const encoded = encodeURIComponent(text);
+    window.open('https://wa.me/?text=' + encoded, '_blank');
+  }
+  window.openWhatsAppWithText = openWhatsAppWithText;
+
+  /* ---------- Migration (move existing dataURL photos into IDB) ---------- */
+  async function migratePhotosToIDB(){
+    if(!idbAvailable) return;
+    const pending = (db.albaranes || []).filter(a => a && a.photo && typeof a.photo === 'string' && a.photo.startsWith('data:'));
+    if(!pending.length) return;
+    for(const a of pending){
+      try {
+        const key = 'img_' + uid();
+        await idbPutImage(key, a.photo);
+        a.photo = key;
+      } catch(err){
+        console.warn('Error migrando foto albaran', a.id, err);
+      }
+    }
+    if(pending.length) save('Migradas fotos a IndexedDB');
+  }
+
+  /* ---------- Modal helpers (fixed/stable) ---------- */
+  function showModal(title, content){
+    const ov = $('modal-overlay'); const titleEl = $('m-title'); const body = $('m-body');
+    if(!ov || !titleEl || !body) return;
+    titleEl.textContent = title || '';
+    body.innerHTML = '';
+    if(content instanceof Node) body.appendChild(content);
+    else body.innerHTML = content || '';
+    ov.classList.remove('hidden'); ov.setAttribute('aria-hidden','false');
+    // focus first interactive element for accessibility
+    setTimeout(()=> { const f = ov.querySelector('button, [tabindex], input'); if(f) f.focus(); }, 60);
+  }
+  function closeModal(){ const ov = $('modal-overlay'); if(!ov) return; ov.classList.add('hidden'); ov.setAttribute('aria-hidden','true'); $('m-title').textContent=''; $('m-body').innerHTML=''; }
+
+  /* Overlay click and ESC */
+  document.addEventListener('DOMContentLoaded', () => {
+    const overlay = $('modal-overlay');
+    const closeBtn = $('modal-close');
+    if(closeBtn) closeBtn.addEventListener('click', closeModal);
+    if(overlay){
+      overlay.addEventListener('click', (e) => { if(e.target === overlay) closeModal(); });
+    }
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModal(); });
+  });
+
+  /* ---------- Init UI ---------- */
+  function initUI(){
+    // IDB availability test + migration
+    idbOpen().then(dbi => { idbAvailable = true; dbi.close(); migratePhotosToIDB().catch(e=>console.warn('Migration failed', e)); })
+                .catch(e => { idbAvailable = false; console.warn('IndexedDB no disponible:', e); showToast('Aviso: IndexedDB no disponible — fotos no persistirán entre sesiones'); });
+
+    $('user-display').textContent = currentUser ? currentUser.n : 'Iniciar';
+    renderNav(); render(currentUser?.role === 'admin' ? 'Admin' : 'Cocina');
+
+    // backup input
+    const backupInput = $('backup-input');
+    backupInput.addEventListener('change', e => {
+      const f = e.target.files[0]; if(!f) return;
+      const fr = new FileReader();
+      fr.onload = () => {
+        try {
+          const json = JSON.parse(fr.result);
+          if(json && json.ingredientes && json.recetas){
+            if(!confirm('Restaurar backup sobrescribirá la BD local. Continuar?')) return;
+            db = json; save('Backup restaurado'); setTimeout(()=> location.reload(), 800);
+          } else showToast('Backup inválido');
+        } catch(err){ showToast('Error leyendo backup'); }
+      };
+      fr.readAsText(f); e.target.value = '';
+    });
+
+    // alb photo input
+    const albInput = $('alb-photo-input');
+    albInput.addEventListener('change', async e => {
+      const f = e.target.files[0]; if(!f) return;
+      try {
+        const dataUrl = await resizeImageFile(f);
+        const panel = $('admin-panel');
+        if(panel){
+          panel.dataset.albPhoto = dataUrl;
+          const prev = $('alb-photo-preview'); if(prev) prev.innerHTML = `<img src="${dataUrl}" class="preview">`;
+        } else {
+          window._transientAlbPhoto = dataUrl;
+        }
+      } catch(err){ showToast('Error procesando imagen'); console.warn(err); }
+      e.target.value = '';
+    });
+
+    // alerts button
+    $('alerts-btn').addEventListener('click', showAlertsModal);
+  }
+
+  /* ---------- Navigation ---------- */
+  function renderNav(){
+    const nav = $('navbar'); nav.innerHTML = '';
+    const views = { Diario:'CAJA', Admin:'GESTIÓN', Cocina:'COCINA', Stock:'STOCK' };
+    Object.entries(views).forEach(([k,v]) => {
+      if(k === 'Admin' && currentUser?.role !== 'admin') return;
+      const btn = document.createElement('button'); btn.textContent = v;
+      btn.addEventListener('click', ()=> render(k));
+      nav.appendChild(btn);
+    });
+  }
+  function render(view){
+    const app = $('app'); app.innerHTML = '';
+    if(view === 'Diario') return renderDiario(app);
+    if(view === 'Admin') return renderAdmin(app);
+    if(view === 'Cocina') return renderCocina(app);
+    if(view === 'Stock') return renderStock(app);
+  }
+
+  /* ---------- Diario ---------- */
+  function renderDiario(target){
+    const today = new Date().toISOString().slice(0,10);
+    const rep = (db.diario||[]).find(d=>d.date===today) || {};
+    target.innerHTML = `
+      <div class="card"><div class="section-header"><div class="title">Cierre Diario</div><div>${today}</div></div>
+        <div class="row"><div class="col"><label>Total</label><input id="z-total" type="number" value="${rep.total||''}"></div>
+        <div class="col"><label>Efectivo</label><input id="z-cash" type="number" value="${rep.cash||''}"></div></div>
+        <div style="text-align:right;margin-top:8px"><button class="btn btn-primary" id="save-z">Guardar</button></div>
+      </div>
+    `;
+    $('save-z').addEventListener('click', ()=> {
+      const d = { date: today, total: parseFloat($('z-total').value)||0, cash: parseFloat($('z-cash').value)||0, card:0, inv:0 };
+      db.diario = db.diario || []; const idx = db.diario.findIndex(x=>x.date===d.date);
+      if(idx>=0) db.diario[idx]=d; else db.diario.push(d);
+      save('Cierre guardado');
+    });
+  }
+
+  /* ---------- Admin ---------- */
+  function renderAdmin(target){
+    target.innerHTML = `
+      <div class="card"><div class="section-header"><div class="title">Admin</div><div></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost" id="btn-albaran">Albaranes</button>
+          <button class="btn btn-ghost" id="btn-conta">Contabilidad</button>
+          <button class="btn btn-ghost" id="btn-tools">Herramientas</button>
+        </div>
+      </div>
+      <div id="admin-panel"></div>
+    `;
+    $('btn-albaran').addEventListener('click', renderAlbaran);
+    $('btn-conta').addEventListener('click', renderContabilidad);
+    $('btn-tools').addEventListener('click', renderTools);
+    renderContabilidad();
+  }
+
+  /* ---------- Albaranes (with datalist & note & images) ---------- */
+  function renderAlbaran(){
+    const panel = $('admin-panel'); if(!panel) return;
+    panel.innerHTML = `
+      <div class="card">
+        <div class="section-header"><div class="title">Recepción Mercancía</div></div>
+        <div class="row">
+          <div class="col"><label>Proveedor</label>
+              <input list="prov-list" id="alb-prov" placeholder="Escribe o selecciona..." onfocus="this.value=''">
+              <datalist id="prov-list">${(db.proveedores||[]).map(p=>`<option value="${escapeHTML(p.n)}">`).join('')}</datalist>
+          </div>
+          <div class="col"><label>Fecha</label><input id="alb-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+        </div>
+        <textarea id="alb-input" rows="3" placeholder="Pegar: Producto | Cantidad | Precio"></textarea>
+        <div style="display:flex; gap:8px">
+          <button class="btn btn-ghost" id="parse-alb">Lectura</button>
+          <button class="btn btn-ghost" id="attach-photo">📷 Adjuntar</button>
+        </div>
+        <div id="alb-photo-preview" style="margin-top:8px"></div>
+        <div id="alb-body" style="margin-top:12px"></div>
+
+        <label>Observaciones (Incidencias)</label>
+        <textarea id="alb-note" rows="2" placeholder="Ej: Faltan gambas, botella rota..."></textarea>
+
+        <div style="text-align:right;margin-top:8px"><button class="btn btn-primary" id="commit-alb">Confirmar entrada</button></div>
+      </div>
+    `;
+    $('attach-photo').addEventListener('click', ()=> $('alb-photo-input').click());
+    $('parse-alb').addEventListener('click', parseAlb);
+    $('commit-alb').addEventListener('click', commitAlb);
+
+    // show transient photo preview if present
+    if(window._transientAlbPhoto){
+      panel.dataset.albPhoto = window._transientAlbPhoto;
+      const prev = $('alb-photo-preview');
+      if(prev) prev.innerHTML = `<img src="${window._transientAlbPhoto}" class="preview">`;
+      delete window._transientAlbPhoto;
+    }
+  }
+
+  let tempItems = [];
+  function parseAlb(){
+    const txt = $('alb-input').value || '';
+    tempItems = [];
+    const lines = txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+    lines.forEach(line=>{
+      const parts = line.split(/\s*\|\s*|\s*;\s*|\t| {2,}/).filter(Boolean);
+      let name = parts[0]||'';
+      let q=1,p=0;
+      if(parts.length>=2){
+        const tail = parts.slice(1).join(' ');
+        const nums = Array.from(tail.matchAll(/-?[\d\.,]+/g)).map(m=>parseFloat(m[0].replace(',','.')));
+        if(nums.length>=2){ q=nums[0]; p=nums[1]; }
+        else if(nums.length===1) p=nums[0];
+      } else {
+        const tokens = line.split(/\s+/);
+        const numParts = tokens.filter(t=>/[\d\.,]/.test(t)).map(t=>parseFloat(t.replace(',','.')));
+        if(numParts.length>=2){ q=numParts[0]; p=numParts[1]; }
+        else if(numParts.length===1) p=numParts[0];
+        const textParts = tokens.filter(t=>!/[\d\.,€$]/.test(t));
+        name = textParts.join(' ') || name;
+      }
+      q = Number(q)||1; p = Number(p)||0;
+      if(p>0 || q>1) tempItems.push({ n:name.trim(), q, p, d:0, iva:10 });
+    });
+    renderAlbGrid();
+  }
+
+  function renderAlbGrid(){
+    const body = $('alb-body'); if(!body) return; body.innerHTML = '';
+    let total=0;
+    tempItems.forEach((it,i)=>{
+      const bruto = (it.p||0)*(it.q||1);
+      const final = bruto*(1-(it.d||0)/100)*(1+(it.iva||0)/100);
+      total += final;
+      const ing = db.ingredientes.find(x=> (x.n||'').toLowerCase().trim() === (it.n||'').toLowerCase().trim());
+      let flag = '';
+      if(ing){
+        const last = (ing.priceHistory && ing.priceHistory.length)?ing.priceHistory[ing.priceHistory.length-1].unitCost:ing.cost||0;
+        const newUnit = (it.p||0)/(it.q||1);
+        const diff = last?((newUnit/last)-1)*100:0;
+        if(Math.abs(diff) > CONFIG.PRICE_FLAG_PERCENT){
+          flag = `<span class="flag" style="background:${diff>0?'#fee2e2':'#dcfce7'};color:${diff>0?'#7f1d1d':'#064e3b'}">${diff>0? '🚩 +'+diff.toFixed(1)+'%':'⬇ '+diff.toFixed(1)+'%'}</span>`;
+        }
+      }
+      body.insertAdjacentHTML('beforeend', `
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px" data-idx="${i}">
+          <input value="${escapeHTML(it.n)}" data-prop="n" style="flex:3;padding:8px;border:1px solid #eee;border-radius:8px"/>
+          <input type="number" value="${it.q}" data-prop="q" style="width:80px;padding:8px;border:1px solid #eee;border-radius:8px"/>
+          <input type="number" value="${it.p}" data-prop="p" style="width:120px;padding:8px;border:1px solid #eee;border-radius:8px"/>
+          <div style="min-width:140px;text-align:right;font-weight:800">${formatMoney(final)} ${flag}</div>
+          <button class="btn btn-ghost" data-remove="${i}">✕</button>
+        </div>
+      `);
+    });
+    body.insertAdjacentHTML('beforeend', `<div style="text-align:right;font-weight:800;margin-top:6px">Total: ${formatMoney(total)}</div>`);
+    body.querySelectorAll('[data-remove]').forEach(btn => btn.addEventListener('click', (e)=> {
+      const idx = Number(e.currentTarget.dataset.remove);
+      tempItems.splice(idx,1); renderAlbGrid();
+    }));
+    body.querySelectorAll('input[data-prop]').forEach(inp => inp.addEventListener('input', (e)=>{
+      const row = e.target.closest('[data-idx]'); const i = Number(row.dataset.idx); const prop = e.target.dataset.prop;
+      tempItems[i][prop] = prop === 'n' ? e.target.value : parseFloat(e.target.value)||0; renderAlbGrid();
+    }));
+  }
+
+  /* ---------- Commit albarán (persist to DB + IDB image) ---------- */
+  async function commitAlb(){
+    if(!tempItems.length) return showToast('Vacío');
+    const prov = $('alb-prov').value.trim();
+    if(!prov) return showToast('Falta proveedor');
+    if(!db.proveedores.some(p=>p.n.toLowerCase() === prov.toLowerCase())) { db.proveedores.push({ n: prov }); save('Nuevo proveedor'); }
+    const date = $('alb-date').value || new Date().toISOString().slice(0,10);
+    const panel = $('admin-panel');
+
+    let attachedPhotoKey = null;
+    const photoCandidate = panel?.dataset?.albPhoto || null;
+    if(photoCandidate && typeof photoCandidate === 'string'){
+      if(photoCandidate.startsWith('data:')){
+        if(idbAvailable){
+          try {
+            const key = 'img_' + uid();
+            await idbPutImage(key, photoCandidate);
+            attachedPhotoKey = key;
+          } catch(err){
+            console.warn('Error guardando imagen en IDB', err);
+            attachedPhotoKey = photoCandidate;
+            showToast('No se pudo guardar la imagen en IndexedDB (se mantendrá temporalmente)');
+          }
+        } else {
+          attachedPhotoKey = photoCandidate;
+          showToast('IndexedDB no disponible: imagen no persistirá entre sesiones');
+        }
+      } else {
+        attachedPhotoKey = photoCandidate; // already a key
+      }
+    } else if(window._transientAlbPhoto){
+      if(idbAvailable){
+        try {
+          const key = 'img_' + uid();
+          await idbPutImage(key, window._transientAlbPhoto);
+          attachedPhotoKey = key; delete window._transientAlbPhoto;
+        } catch(err){ console.warn('Error guardando imagen transitoria', err); attachedPhotoKey = window._transientAlbPhoto; }
+      } else {
+        attachedPhotoKey = window._transientAlbPhoto; delete window._transientAlbPhoto;
+        showToast('IndexedDB no disponible: imagen no persistirá entre sesiones');
+      }
+    }
+
+    // update ingredients
+    tempItems.forEach(it=>{
+      const qty = Number(it.q)||1;
+      const unitNetCost = qty>0 ? ((Number(it.p)||0) * (1 - (Number(it.d)||0)/100) / qty) : (Number(it.p)||0);
+      let ing = db.ingredientes.find(x => (x.n||'').toLowerCase().trim() === (it.n||'').toLowerCase().trim());
+      if(ing){
+        const prevTotal = (Number(ing.stock)||0) * (Number(ing.cost)||0);
+        const addedTotal = qty * unitNetCost;
+        const newStock = (Number(ing.stock)||0) + qty;
+        ing.cost = newStock > 0 ? ((prevTotal + addedTotal) / newStock) : unitNetCost;
+        ing.stock = newStock;
+        ing.priceHistory = ing.priceHistory || [];
+        if(ing.priceHistory.length === 0 || Math.abs((ing.priceHistory[ing.priceHistory.length-1].unitCost || 0) - unitNetCost) > 0.0001){
+          ing.priceHistory.push({ date: new Date().toISOString(), unitCost: unitNetCost });
+        }
+      } else {
+        db.ingredientes.push({ id: uid(), n: it.n, stock: qty, cost: unitNetCost||0, min:0, unit:'ud', yield:1, aller: defaultAllergens(), priceHistory:[{date:new Date().toISOString(), unitCost:unitNetCost}], prov: '' });
+      }
+    });
+
+    const total = tempItems.reduce((s,it)=> s + ((it.p||0)*(it.q||1)*(1-(it.d||0)/100)*(1+(it.iva||0)/100)), 0);
+    const note = $('alb-note') ? $('alb-note').value.trim() : '';
+    const albaran = { id: uid(), date, prov, items: clone(tempItems), total, note: note || null, invoiced:false, photo: attachedPhotoKey || null };
+    db.albaranes.push(albaran);
+
+    if(panel){ delete panel.dataset.albPhoto; const prev = $('alb-photo-preview'); if(prev) prev.innerHTML=''; }
+    save('Albarán guardado');
+    renderContabilidad();
+  }
+
+  /* ---------- Delete albarán (with IDB cleanup) ---------- */
+  async function deleteAlbaran(albId){
+    const a = db.albaranes.find(x => x.id === albId);
+    if(!a) return;
+    if(!confirm('Eliminar albarán? Esta acción es irreversible.')) return;
+    // delete image if IDB key
+    if(a.photo && typeof a.photo === 'string' && a.photo.startsWith('img_') && idbAvailable){
+      try { await idbDeleteImage(a.photo); } catch(err){ console.warn('No se pudo borrar imagen IDB', err); }
+    }
+    db.albaranes = (db.albaranes||[]).filter(x=>x.id !== albId);
+    save('Albarán eliminado');
+    renderContabilidad();
+  }
+
+  /* ---------- View albarán ---------- */
+  async function viewAlbaran(id){
+    const a = db.albaranes.find(x=>x.id===id); if(!a) return;
+    const itemsHtml = (a.items||[]).map(it=>`<tr><td>${escapeHTML(it.n)}</td><td>${it.q}</td><td>${it.p}€</td><td>${it.d||0}%</td><td>${it.iva||0}%</td><td><b>${((it.q*it.p*(1-(it.d||0)/100)*(1+(it.iva||0)/100))||0).toFixed(2)}€</b></td></tr>`).join('');
+    let photoHtml = '';
+    if(a.photo){
+      try {
+        if(typeof a.photo === 'string' && a.photo.startsWith('img_') && idbAvailable){
+          const dataUrl = await idbGetImage(a.photo);
+          if(dataUrl) photoHtml = `<div style="margin-bottom:10px"><img src="${dataUrl}" class="preview"></div>`;
+          else photoHtml = `<div style="margin-bottom:10px;color:var(--sub)">Foto (no disponible)</div>`;
+        } else if(typeof a.photo === 'string' && a.photo.startsWith('data:')) {
+          photoHtml = `<div style="margin-bottom:10px"><img src="${a.photo}" class="preview"></div>`;
+        } else {
+          photoHtml = `<div style="margin-bottom:10px;color:var(--sub)">Foto (no disponible)</div>`;
+        }
+      } catch(err){ console.warn('Error cargando imagen albaran:', err); photoHtml = `<div style="margin-bottom:10px;color:var(--sub)">Foto (error al cargar)</div>`; }
+    }
+
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div style="margin-bottom:15px; font-size:0.9rem; color:var(--sub)">Fecha: <b>${escapeHTML(a.date || '')}</b><br>Estado: <b>${a.invoiced ? 'FACTURADO' : 'PENDIENTE'}</b></div>
+      ${photoHtml}
+      <div class="table-wrap" style="margin-bottom:15px">
+        <table style="font-size:0.9rem">
+          <thead><tr><th>Prod</th><th>Cant</th><th>Pre</th><th>Dto</th><th>IVA</th><th>Tot</th></tr></thead>
+          <tbody>${itemsHtml}</tbody>
+        </table>
+      </div>
+      <div style="text-align:right; font-size:1.2rem; font-weight:800; margin-bottom:10px">Total: ${(a.total||0).toFixed(2)}€</div>
+      ${a.note ? `<div style="background:#fffbeb; padding:10px; border-radius:8px; font-size:0.9rem">📝 <b>Nota:</b> ${escapeHTML(a.note)}</div>` : ''}
+    `;
+    // add delete button
+    const footer = document.createElement('div'); footer.style.textAlign='right'; footer.style.marginTop='10px';
+    const delBtn = document.createElement('button'); delBtn.className='btn btn-ghost'; delBtn.textContent='Eliminar albarán';
+    delBtn.addEventListener('click', async () => { await deleteAlbaran(a.id); closeModal(); });
+    footer.appendChild(delBtn);
+    container.appendChild(footer);
+
+    showModal(`Albarán ${escapeHTML(a.prov)}`, container);
+  }
+
+  /* ---------- Contabilidad (list) ---------- */
+  function renderContabilidad(){
+    const panel = $('admin-panel'); if(!panel) return;
+    const pendientes = db.albaranes.filter(a=>!a.invoiced);
+    const grouped = {};
+    pendientes.forEach(a => { grouped[a.prov] = grouped[a.prov] || { count:0, total:0, ids:[] }; grouped[a.prov].count++; grouped[a.prov].total += a.total; grouped[a.prov].ids.push(a.id); });
+
+    let html = `<div class="card"><div class="section-header"><div class="title">Pendientes facturar</div></div>`;
+    html += Object.entries(grouped).map(([prov, d]) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #f1f5f9"><div><b>${escapeHTML(prov)}</b> <small>${d.count} albarán(es)</small></div><div><b>${formatMoney(d.total)}</b> <button class="btn btn-sm btn-accent" data-invoice-prov="${escapeHTML(prov)}" data-invoice-ids="${d.ids.join(',')}" data-invoice-total="${d.total}">Facturar</button></div></div>`).join('');
+    html += `</div>`;
+
+    const last = db.albaranes.slice().reverse().slice(0,8);
+    html += `<div class="card"><div class="section-header"><div class="title">Últimos albaranes</div></div>`;
+    last.forEach(a => {
+      html += `<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #f1f5f9">
+        <div><b>${escapeHTML(a.prov)}</b> <small>${escapeHTML(a.date)}</small></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <b>${formatMoney(a.total)}</b>
+          <button class="btn btn-ghost btn-sm" data-alb-id="${a.id}" data-action="view">Ver</button>
+          <button class="btn btn-ghost btn-sm" data-alb-id="${a.id}" data-action="del">Eliminar</button>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+
+    panel.innerHTML = html;
+
+    panel.querySelectorAll('[data-invoice-prov]').forEach(b=> b.addEventListener('click', (e)=>{
+      const prov = e.currentTarget.dataset.invoiceProv;
+      const ids = e.currentTarget.dataset.invoiceIds;
+      const tot = Number(e.currentTarget.dataset.invoiceTotal||0);
+      invoiceModal(prov, ids, tot);
+    }));
+
+    panel.querySelectorAll('[data-alb-id][data-action="view"]').forEach(b=> b.addEventListener('click', (e)=> viewAlbaran(e.currentTarget.dataset.albId)));
+    panel.querySelectorAll('[data-alb-id][data-action="del"]').forEach(b=> b.addEventListener('click', async (e)=> { const id = e.currentTarget.dataset.albId; await deleteAlbaran(id); }));
+  }
+
+  function invoiceModal(prov, idsStr, total){
+    const ids = (''+idsStr).split(',').map(s=>s.trim()).filter(Boolean);
+    showModal("Nueva Factura", `
+      <label>Proveedor</label><input id="inv-prov" value="${escapeHTML(prov)}" />
+      <label>Nº factura</label><input id="inv-code" />
+      <label>Importe</label><input id="inv-total" type="number" value="${total}" />
+      <div style="text-align:right;margin-top:8px"><button class="btn btn-primary" id="create-inv">Crear</button></div>
+    `);
+    // attach listener after modal created
+    setTimeout(()=> {
+      const createBtn = $('create-inv');
+      if(createBtn) createBtn.addEventListener('click', ()=> {
+        const code = $('inv-code').value.trim();
+        const provName = $('inv-prov').value.trim();
+        const tot = parseFloat($('inv-total').value) || 0;
+        if(!code) return showToast('Falta nº factura');
+        ids.forEach(id => { const a = db.albaranes.find(x=>x.id==id); if(a) a.invoiced = true; });
+        db.facturas.push({ id: uid(), date: new Date().toISOString().slice(0,10), prov:provName, code, total: tot, paid:false, dueDate: null });
+        save('Factura creada'); closeModal(); renderContabilidad();
+      });
+    }, 50);
+  }
+
+  /* ---------- Tools (thermometer & smart order) ---------- */
+  function renderTools(){
+    const panel = $('admin-panel'); if(!panel) return;
+    panel.innerHTML = `
+      <div class="card"><div class="section-header"><div class="title">Herramientas Inteligencia</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost" id="btn-therm">Termómetro compras</button>
+          <button class="btn btn-ghost" id="btn-order">Pedido inteligente (WhatsApp)</button>
+          <button class="btn btn-ghost" id="btn-xlsx">Exportar XLSX</button>
+        </div>
+      </div>
+      <div id="tools-body"></div>
+    `;
+    $('btn-therm').addEventListener('click', showPurchaseThermometer);
+    $('btn-order').addEventListener('click', ()=> generateSmartOrder(true));
+    $('btn-xlsx').addEventListener('click', exportAllXLSX);
+  }
+
+  function showPurchaseThermometer(){
+    showModal('Termómetro de Compras', `
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label>Mes</label><input id="therm-month" type="month" value="${new Date().toISOString().slice(0,7)}">
+        <button class="btn btn-accent" id="therm-run">Generar</button>
+      </div>
+      <canvas id="therm-canvas" style="height:320px"></canvas>
+      <div id="therm-legend"></div>
+    `);
+    setTimeout(()=> {
+      const run = $('therm-run');
+      if(run) run.addEventListener('click', ()=> renderThermometerChart($('therm-month').value));
+      renderThermometerChart(new Date().toISOString().slice(0,7));
+    }, 50);
+  }
+
+  function renderThermometerChart(month){
+    const start = new Date(month + '-01T00:00:00');
+    const end = new Date(start.getFullYear(), start.getMonth()+1, 1);
+    const sums = {};
+    (db.albaranes||[]).forEach(a=>{
+      const dt = new Date(a.date);
+      if(dt >= start && dt < end){
+        sums[a.prov] = (sums[a.prov]||0) + (a.total || 0);
+      }
+    });
+    const labels = Object.keys(sums);
+    const data = labels.map(l=> sums[l]);
+    const ctx = $('therm-canvas');
+    if(ctx && window.Chart){
+      if(charts.therm) charts.therm.destroy();
+      charts.therm = new Chart(ctx, { type:'pie', data:{ labels, datasets:[{ data, backgroundColor: labels.map((_,i)=>['#2563eb','#ef4444','#f59e0b','#10b981','#7c3aed'][i%5]) }] }});
+      $('therm-legend').innerHTML = labels.map((l,i)=>`<div style="display:flex;justify-content:space-between;padding:6px 0"><div>${escapeHTML(l)}</div><div>${data[i].toFixed(2)}€</div></div>`).join('');
+    }
+  }
+
+  // Smart order safe
+  window._lastSmartOrderGroups = [];
+  function generateSmartOrder(openWhatsapp=false){
+    const toBuy = (db.ingredientes||[]).filter(i => (i.stock||0) < (i.min||0));
+    if(!toBuy.length) return showToast('Nada por debajo del mínimo');
+    const groups = {};
+    toBuy.forEach(i => { const prov = i.prov || 'Proveedor por defecto'; (groups[prov] = groups[prov]||[]).push(i); });
+
+    window._lastSmartOrderGroups = [];
+    let html = `<div style="max-height:60vh;overflow:auto">`;
+    Object.entries(groups).forEach(([prov, items], idx)=>{
+      let plain = `Hola ${prov},\nNecesito los siguientes productos:\n`;
+      items.forEach(it => { const needed = Math.max(0, (it.min||0) - (it.stock||0)); plain += `- ${it.n}: ${needed} ${it.unit||''}\n`; });
+      window._lastSmartOrderGroups.push({ prov, items, text: plain });
+      html += `<div style="border:1px solid #eee;padding:10px;margin-bottom:8px;border-radius:8px">
+        <h4>${escapeHTML(prov)}</h4>
+        <pre style="white-space:pre-wrap">${escapeHTML(plain)}</pre>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-ghost copy-btn" data-group-index="${idx}">Copiar texto</button>
+          <button class="btn btn-primary print-btn" data-group-index="${idx}">Imprimir / PDF</button>
+          <button class="btn btn-accent wa-btn" data-group-index="${idx}">WhatsApp</button>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+    showModal('Pedido Inteligente', html);
+
+    setTimeout(()=> {
+      const modal = $('m-body');
+      modal.querySelectorAll('.copy-btn').forEach(btn => btn.addEventListener('click', e => {
+        const idx = Number(e.currentTarget.dataset.groupIndex); const group = window._lastSmartOrderGroups[idx];
+        if(group) navigator.clipboard.writeText(group.text).then(()=> showToast('Pedido copiado')).catch(()=> showToast('No se pudo copiar'));
+      }));
+      modal.querySelectorAll('.print-btn').forEach(btn => btn.addEventListener('click', e => {
+        const idx = Number(e.currentTarget.dataset.groupIndex); const group = window._lastSmartOrderGroups[idx];
+        if(group){ const w = window.open('about:blank','_blank'); w.document.write(`<pre>${escapeHTML(group.text)}</pre>`); w.document.close(); w.print(); }
+      }));
+      modal.querySelectorAll('.wa-btn').forEach(btn => btn.addEventListener('click', e => {
+        const idx = Number(e.currentTarget.dataset.groupIndex); const group = window._lastSmartOrderGroups[idx];
+        if(group) openWhatsAppWithText(group.text);
+      }));
+    }, 60);
+  }
+
+  /* ---------- Stock / Ingredients / Recipes (core) ---------- */
+  function renderStock(target){
+    target.innerHTML = `
+      <div class="card"><div class="section-header"><div class="title">Inventario</div><div style="display:flex;gap:8px"><button class="btn btn-ghost" id="btn-new-ing">+ Nuevo</button><button class="btn btn-ghost" id="btn-order-wh">Pedir (WhatsApp)</button></div></div>
+        <div id="ing-list"></div>
+      </div>
+    `;
+    $('btn-new-ing').addEventListener('click', newIngredient);
+    $('btn-order-wh').addEventListener('click', ()=> generateSmartOrder(true));
+    renderIngList();
+  }
+
+  function renderIngList(){
+    const list = $('ing-list'); list.innerHTML = '';
+    (db.ingredientes||[]).forEach(i=>{
+      list.insertAdjacentHTML('beforeend', `<div class="card" style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:800">${escapeHTML(i.n)} ${i.aller ? renderAllergenInline(i.aller) : ''}</div>
+          <div style="color:var(--sub);font-size:13px">Stock: ${(i.stock||0)} ${escapeHTML(i.unit||'ud')} — Coste: ${(i.cost||0).toFixed(2)}€ — Proveedor: ${escapeHTML(i.prov||'-')}</div>
+        </div>
+        <div style="display:flex;gap:8px"><button class="btn btn-ghost" data-edit="${i.id}">Editar</button><button class="btn btn-ghost" data-del="${i.id}">✕</button></div>
+      </div>`);
+    });
+    list.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', e=> editIngredient(e.currentTarget.dataset.edit)));
+    list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', e=>{
+      const id = e.currentTarget.dataset.del; if(!confirm('Eliminar ingrediente?')) return;
+      db.ingredientes = (db.ingredientes||[]).filter(x=>x.id!==id); save('Ingrediente eliminado'); renderStock($('app'));
+    }));
+  }
+
+  function renderAllergenInline(allerMap){
+    const present = ALLERGENS.filter(a=>allerMap && allerMap[a.key]);
+    if(!present.length) return '';
+    return present.map(a=>`<span title="${escapeHTML(a.label)}" style="margin-left:6px">${a.emoji}</span>`).join('');
+  }
+
+  function newIngredient(){ const id = uid(); const ing = { id, n:'Nuevo ingrediente', cost:0, stock:0, min:0, unit:'kg', yield:1, prov:'', aller: defaultAllergens(), priceHistory:[] }; db.ingredientes.push(ing); save('Ingrediente creado'); editIngredient(id); }
+
+  function editIngredient(id){
+    const ing = db.ingredientes.find(x=>x.id===id); if(!ing) return showToast('Ingrediente no encontrado');
+    let allergenHtml = `<div class="allergen-grid">`;
+    ALLERGENS.forEach(a=>{
+      allergenHtml += `<label style="display:flex;flex-direction:column;align-items:center;padding:8px;border:1px solid var(--border);border-radius:8px">
+        <div style="font-size:20px">${a.emoji}</div>
+        <div style="font-size:12px">${escapeHTML(a.label)}</div>
+        <input type="checkbox" data-aller="${a.key}" ${ing.aller && ing.aller[a.key] ? 'checked' : ''} />
+      </label>`;
+    });
+    allergenHtml += `</div>`;
+    showModal('Editar Ingrediente', `
+      <label>Nombre</label><input id="ei-n" value="${escapeHTML(ing.n)}">
+      <div class="row"><div class="col"><label>Coste</label><input id="ei-c" type="number" value="${ing.cost||0}"></div><div class="col"><label>Stock</label><input id="ei-s" type="number" value="${ing.stock||0}"></div></div>
+      <div class="row"><div class="col"><label>Min</label><input id="ei-m" type="number" value="${ing.min||0}"></div><div class="col"><label>Unidad</label><input id="ei-u" value="${escapeHTML(ing.unit||'ud')}"></div></div>
+      <label>Proveedor</label><input id="ei-prov" value="${escapeHTML(ing.prov||'')}">
+      <div style="margin-top:8px"><b>Alérgenos (seleccione)</b>${allergenHtml}</div>
+      <div style="text-align:right;margin-top:10px"><button class="btn btn-primary" id="save-ing">Guardar</button></div>
+    `);
+    setTimeout(()=> {
+      const btn = $('save-ing');
+      if(!btn) return;
+      btn.addEventListener('click', ()=> {
+        ing.n = $('ei-n').value.trim() || ing.n;
+        ing.cost = parseFloat($('ei-c').value) || 0;
+        ing.stock = parseFloat($('ei-s').value) || 0;
+        ing.min = parseFloat($('ei-m').value) || 0;
+        ing.unit = $('ei-u').value || ing.unit;
+        ing.prov = $('ei-prov').value || ing.prov;
+        ing.aller = ing.aller || defaultAllergens();
+        ALLERGENS.forEach(a => { const cb = document.querySelector(`[data-aller="${a.key}"]`); if(cb) ing.aller[a.key] = !!cb.checked; });
+        ing.priceHistory = ing.priceHistory || [];
+        if(ing.priceHistory.length === 0 || Math.abs((ing.priceHistory[ing.priceHistory.length-1].unitCost||0) - ing.cost) > 0.0001){
+          ing.priceHistory.push({ date: new Date().toISOString(), unitCost: ing.cost });
+        }
+        save('Ingrediente actualizado'); closeModal(); renderStock($('app'));
+      });
+    }, 40);
+  }
+
+  /* ---------- Recipes (Cocina) ---------- */
+  function renderCocina(target){
+    target.innerHTML = `
+      <div class="card"><div class="section-header"><div class="title">Fichas Técnicas</div><div><button class="btn btn-ghost" id="new-recipe">+ Nueva</button> <button class="btn btn-accent" id="inspect">Inspección de Sanidad</button></div></div>
+        <div id="recipes-list"></div>
+      </div>
+    `;
+    $('new-recipe').addEventListener('click', ()=> editRecipe());
+    $('inspect').addEventListener('click', inspectionCard);
+    renderRecipesList();
+  }
+
+  function renderRecipesList(){
+    const list = $('recipes-list'); list.innerHTML = '';
+    (db.recetas||[]).forEach(r=>{
+      const agg = computeAllergensForRecipe(r);
+      const icons = allergenListFromMap(agg).map(a=>a.emoji).join(' ');
+      const cost = calcRecipe(r).total;
+      list.insertAdjacentHTML('beforeend', `<div class="card" style="display:flex;justify-content:space-between;align-items:center">
+        <div><b>${escapeHTML(r.n)}</b><div style="color:var(--sub);font-size:13px">Coste: ${cost.toFixed(2)}€ — Tiempo: ${r.time||0}min</div></div>
+        <div style="display:flex;gap:8px;align-items:center"><div title="Alérgenos">${icons}</div><button class="btn btn-ghost" data-view="${r.id}">Ver</button><button class="btn btn-ghost" data-edit="${r.id}">Editar</button></div>
+      </div>`);
+    });
+    const panel = $('recipes-list');
+    panel.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click', e=> viewRecipe(e.currentTarget.dataset.view)));
+    panel.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', e=> editRecipe(e.currentTarget.dataset.edit)));
+  }
+
+  function editRecipe(id){
+    const r = id ? db.recetas.find(x=>x.id===id) : { id: uid(), n:'Nueva receta', pvp:0, time:5, items:[], prodSessions:[] };
+    let ingOptions = (db.ingredientes||[]).map(i => `<option value="${i.id}">${escapeHTML(i.n)}</option>`).join('');
+    let recOptions = (db.recetas||[]).filter(rr => rr.id !== r.id).map(rr => `<option value="${rr.id}">${escapeHTML(rr.n)}</option>`).join('');
+    showModal(id ? 'Editar Receta' : 'Nueva Receta', `
+      <label>Nombre</label><input id="r-n" value="${escapeHTML(r.n)}">
+      <div class="row"><div class="col"><label>PVP</label><input id="r-pvp" type="number" value="${r.pvp||0}"></div><div class="col"><label>Tiempo (min)</label><input id="r-time" type="number" value="${r.time||5}"></div></div>
+      <label>Ingredientes / Sub-recetas</label>
+      <div id="r-list" style="background:#f8fafc;padding:10px;border-radius:8px;max-height:200px;overflow:auto"></div>
+      <div class="row" style="align-items:center">
+        <select id="r-type" style="flex:1"><option value="ing">Ingrediente</option><option value="rec">Sub-receta</option></select>
+        <select id="r-ing" style="flex:2">${ingOptions}</select>
+        <select id="r-rec" style="flex:2;display:none">${recOptions}</select>
+        <input id="r-q" type="number" placeholder="Cant" style="width:90px">
+        <button class="btn btn-ghost" id="add-item">Añadir</button>
+      </div>
+      <div style="text-align:right;margin-top:10px"><button class="btn btn-primary" id="save-rec">Guardar</button></div>
+    `);
+    r.items = r.items || [];
+    function renderItems(){
+      const list = $('r-list'); list.innerHTML = r.items.map((it, idx)=>{
+        if(it.type === 'rec'){ const sub = db.recetas.find(x=>x.id===it.id); return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid #eee"><div>${escapeHTML(sub?.n||'Receta')} — ${it.q}</div><div><button class="btn btn-ghost" data-del="${idx}">✕</button></div></div>`; }
+        const ing = db.ingredientes.find(x=>x.id===it.id);
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid #eee"><div>${escapeHTML(ing?.n||'Ingrediente')} — ${it.q}</div><div><button class="btn btn-ghost" data-del="${idx}">✕</button></div></div>`;
+      }).join('');
+      list.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', (e)=>{ r.items.splice(Number(e.currentTarget.dataset.del),1); renderItems(); }));
+    }
+    renderItems();
+    setTimeout(()=> {
+      const addBtn = $('add-item');
+      addBtn.addEventListener('click', ()=> {
+        const typ = $('r-type').value; const q = parseFloat($('r-q').value) || 0;
+        if(q <= 0) return showToast('Cantidad inválida');
+        const sel = typ === 'ing' ? $('r-ing').value : $('r-rec').value;
+        if(!sel) return showToast('Seleccione elemento');
+        r.items.push({ id: sel, q, type: typ });
+        $('r-q').value = ''; renderItems();
+      });
+      const saveBtn = $('save-rec');
+      saveBtn.addEventListener('click', ()=> {
+        r.n = $('r-n').value || r.n; r.pvp = parseFloat($('r-pvp').value)||0; r.time = parseFloat($('r-time').value)||0;
+        r.allergens = computeAllergensForRecipe(r);
+        const idx = db.recetas.findIndex(x=>x.id===r.id);
+        if(idx>=0) db.recetas[idx]=r; else db.recetas.push(r);
+        save('Receta guardada'); closeModal(); renderCocina($('app'));
+      });
+    }, 40);
+  }
+
+  /* ---------- Recipe view & timer & sales ---------- */
+  function viewRecipe(id){
+    const r = db.recetas.find(x=>x.id===id); if(!r) return;
+    const cost = calcRecipe(r).total;
+    const allergens = allergenListFromMap(computeAllergensForRecipe(r));
+    const allergenHtml = allergens.length ? allergens.map(a => `<div style="display:inline-block;margin-right:6px">${a.emoji} ${a.label}</div>`).join('') : '<div style="color:var(--sub)">Sin alérgenos</div>';
+    const running = (r.prodSessions||[]).some(s=>!s.end);
+    showModal(r.n, `
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="flex:1;background:#f8fafc;padding:10px;border-radius:8px;text-align:center"><b>${cost.toFixed(2)}€</b><div style="font-size:12px;color:#666">Coste total</div></div>
+        <div style="flex:1;background:#f8fafc;padding:10px;border-radius:8px;text-align:center"><b>${(r.pvp||0).toFixed(2)}€</b><div style="font-size:12px;color:#666">PVP</div></div>
+        <div style="flex:1;background:#f8fafc;padding:10px;border-radius:8px;text-align:center"><b>${((r.pvp||0)-cost).toFixed(2)}€</b><div style="font-size:12px;color:#666">Margen</div></div>
+      </div>
+      <div style="margin-bottom:8px"><b>Alérgenos del plato:</b> ${allergenHtml}</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <button class="btn btn-accent" id="prod-toggle">${running ? 'Detener ⏹' : 'Iniciar ▶'}</button>
+        <div style="margin-left:10px"><span id="prod-timer-display" style="font-weight:800">0:00</span><div id="prod-labour-cost" style="font-size:12px;color:#666"></div></div>
+      </div>
+      <h4>Registrar venta</h4>
+      <div style="display:flex;gap:8px;align-items:center"><input id="sale-q" type="number" placeholder="Unidades" style="width:120px"><input id="sale-date" type="date" value="${new Date().toISOString().slice(0,10)}"><button class="btn btn-primary" id="sale-add">Registrar</button></div>
+      <div id="sale-history" style="margin-top:8px;max-height:160px;overflow:auto"></div>
+      <div style="text-align:right;margin-top:10px"><button class="btn btn-ghost" id="edit-rec">Editar</button></div>
+    `);
+
+    updateRecipeTimerDisplay(r);
+    setTimeout(()=> {
+      const prodToggle = $('prod-toggle');
+      prodToggle.addEventListener('click', ()=> {
+        const running = (r.prodSessions||[]).some(s=>!s.end);
+        if(running) stopProductionTimer(r.id); else startProductionTimer(r.id);
+        updateRecipeTimerDisplay(r);
+      });
+
+      function refreshSales(){
+        const hist = (db.salesLog||[]).filter(s=>s.recipeId===r.id).slice().reverse();
+        $('sale-history').innerHTML = hist.length ? hist.map(s=>`<div style="display:flex;justify-content:space-between;padding:6px;border-bottom:1px solid #eee"><div>${s.date}</div><div>${s.qty} u</div></div>`).join('') : '<div style="color:var(--sub)">No hay ventas</div>';
+      }
+      refreshSales();
+      const saleBtn = $('sale-add');
+      saleBtn.addEventListener('click', ()=> {
+        const qty = parseFloat($('sale-q').value) || 0; const date = $('sale-date').value;
+        if(!qty) return showToast('Cantidad inválida');
+        db.salesLog = db.salesLog || []; db.salesLog.push({ id: uid(), recipeId: r.id, date, qty });
+        save('Venta registrada'); $('sale-q').value=''; refreshSales();
+      });
+      const editBtn = $('edit-rec'); editBtn.addEventListener('click', ()=> { closeModal(); editRecipe(r.id); });
+    }, 50);
+  }
+
+  function startProductionTimer(recipeId){
+    const r = db.recetas.find(x=>x.id===recipeId); if(!r) return;
+    r.prodSessions = r.prodSessions || [];
+    if(r.prodSessions.some(s=>!s.end)) return;
+    r.prodSessions.push({ start: new Date().toISOString(), end: null });
+    save('Inicio cronómetro'); if(window._prodInterval) clearInterval(window._prodInterval);
+    window._prodInterval = setInterval(()=> updateRecipeTimerDisplay(r), 1000);
+  }
+  function stopProductionTimer(recipeId){
+    const r = db.recetas.find(x=>x.id===recipeId); if(!r || !r.prodSessions) return;
+    const sess = r.prodSessions.slice().reverse().find(s=>!s.end);
+    if(sess) sess.end = new Date().toISOString();
+    save('Cronómetro detenido'); if(window._prodInterval){ clearInterval(window._prodInterval); window._prodInterval=null; }
+  }
+  function updateRecipeTimerDisplay(r){
+    const el = $('prod-timer-display'); const labourEl = $('prod-labour-cost'); if(!el) return;
+    const s = (r.prodSessions||[]).slice().reverse().find(ss=>!ss.end);
+    let elapsed = 0;
+    if(s) elapsed = (Date.now() - new Date(s.start).getTime())/1000;
+    else {
+      const last = (r.prodSessions||[]).slice().reverse().find(ss=>ss.end);
+      if(last) elapsed = (new Date(last.end).getTime() - new Date(last.start).getTime())/1000;
+    }
+    const mins = Math.floor(elapsed/60); const secs = String(Math.floor(elapsed%60)).padStart(2,'0');
+    el.textContent = `${mins}:${secs} min`;
+    if(labourEl) labourEl.textContent = `Coste MO aprox: ${(elapsed/3600 * CONFIG.COST_HOUR).toFixed(2)}€`;
+  }
+
+  /* ---------- Inspection (Carta de Alérgenos) ---------- */
+  function inspectionCard(){
+    const items = (db.recetas || []).map(r => {
+      const agg = computeAllergensForRecipe(r);
+      const list = allergenListFromMap(agg).map(a => `${a.emoji} ${a.label}`).join(', ');
+      return { name: r.n, allergens: list || 'Sin alérgenos' };
+    });
+    let html = `<div style="padding:8px"><h2>Carta de Alérgenos</h2><p style="color:var(--sub)">Generada: ${new Date().toLocaleString()}</p>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">`;
+    items.forEach(it => html += `<div style="border:1px solid #eee;padding:8px;border-radius:8px"><div style="font-weight:800">${escapeHTML(it.name)}</div><div style="color:#444;margin-top:6px">${escapeHTML(it.allergens)}</div></div>`);
+    html += `</div><div style="margin-top:12px;text-align:right"><button class="btn btn-accent" id="print-allergen">Imprimir / Mostrar</button></div></div>`;
+    showModal('Inspección de Sanidad — Carta de Alérgenos', html);
+    setTimeout(()=> {
+      const btn = $('print-allergen'); if(btn) btn.addEventListener('click', ()=> {
+        const w = window.open('about:blank','_blank');
+        w.document.write(`<html><head><title>Carta de Alérgenos</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Arial;padding:14px}h2{margin-top:0}</style></head><body>${$('m-body').innerHTML}</body></html>`);
+        w.document.close(); w.print();
+      });
+    }, 50);
+  }
+
+  /* ---------- Alerts ---------- */
+  function gatherAlerts(){
+    const alerts = [];
+    (db.ingredientes||[]).forEach(i => {
+      if((i.stock||0) <= (i.min||0)) alerts.push({ type:'stock', text: `${i.n} bajo mínimo (${i.stock||0} ${i.unit||'ud'})` });
+      if((i.stock||0) <= 0) alerts.push({ type:'stock-zero', text: `${i.n} agotado` });
+    });
+    const today = new Date();
+    (db.facturas||[]).forEach(f => {
+      if(f.paid) return;
+      const due = f.dueDate ? new Date(f.dueDate) : new Date(new Date(f.date).getTime() + 30*24*3600*1000);
+      const diff = Math.ceil((due - today)/(24*3600*1000));
+      if(diff <= 3 && diff >= 0) alerts.push({ type:'invoice', text: `Factura ${f.code||''} vence en ${diff} días` });
+    });
+    return alerts;
+  }
+  function showAlertsModal(){
+    const alerts = gatherAlerts();
+    if(!alerts.length) return showToast('No hay alertas');
+    const html = `<div style="max-height:60vh;overflow:auto">${alerts.map(a=>`<div style="padding:8px;border-bottom:1px solid #eee"><b>${escapeHTML(a.text)}</b></div>`).join('')}</div>`;
+    showModal('Alertas', html);
+  }
+
+  /* ---------- Calc recipe ---------- */
+  function calcRecipe(r, visited = new Set()){
+    if(!r) return { mat:0, mo:0, total:0 };
+    if(visited.has(r.id)) return { mat:0, mo:0, total:0 };
+    visited.add(r.id);
+    let mat = 0;
+    (r.items||[]).forEach(it=>{
+      if(it.type === 'ing'){
+        const ing = db.ingredientes.find(x=>x.id===it.id);
+        if(ing) mat += (Number(it.q)||0) * (Number(ing.cost)||0) / ((ing.yield && ing.yield>0)?ing.yield:1);
+      } else if(it.type === 'rec'){
+        const sub = db.recetas.find(x=>x.id===it.id);
+        if(sub){
+          const subCost = calcRecipe(sub, visited).total;
+          mat += (Number(it.q)||0) * subCost;
+        }
+      }
+    });
+    const mo = ((Number(r.time)||0)/60) * CONFIG.COST_HOUR;
+    return { mat, mo, total: mat + mo };
+  }
+
+  /* ---------- Export XLSX / CSV ---------- */
+  function exportAllXLSX(){
+    if(typeof XLSX === 'undefined') { showToast('SheetJS no cargado. Se exportará CSV'); return exportVentasCSV(); }
+    const wb = XLSX.utils.book_new();
+    const wsDiario = XLSX.utils.json_to_sheet((db.diario||[]).map(d=>({Fecha:d.date,Total:d.total||0})));
+    XLSX.utils.book_append_sheet(wb, wsDiario, 'Ventas');
+    const wsIng = XLSX.utils.json_to_sheet((db.ingredientes||[]).map(i=>({ID:i.id,Nombre:i.n,Stock:i.stock||0,Coste:i.cost||0,Proveedor:i.prov||''})));
+    XLSX.utils.book_append_sheet(wb, wsIng, 'Ingredientes');
+    const wbout = XLSX.write(wb, {bookType:'xlsx',type:'array'});
+    const blob = new Blob([wbout], {type:'application/octet-stream'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `arume_${new Date().toISOString().slice(0,10)}.xlsx`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    showToast('XLSX generado');
+  }
+  function exportVentasCSV(){
+    let csv = 'Fecha,Total\n'; (db.diario||[]).forEach(d => csv += `${d.date},${(d.total||0)}\n`);
+    const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='ventas_arume.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }
+
+  /* ---------- Boot ---------- */
+  document.addEventListener('DOMContentLoaded', () => {
+    initUI();
+  });
+
+  // Expose a few useful helpers for debugging
+  window._arume = { idbAvailable: () => idbAvailable, idbGetImage, idbPutImage, idbDeleteImage };
+
+  // Init UI finally (separated so showModal handlers already attached)
+  function initUI(){
+    initUI = () => {}; // guard - only run once
+    initUI(); // placeholder, overwritten above. We'll run our real init below.
+  }
+
+  // We shadowed initUI, reimplement real init (to avoid confusion)
+  (function realInit(){
+    // Prepare UI and listeners
+    initUI = function(){ /* no-op placeholder */ };
+    // IDB check + migration
+    idbOpen().then(dbi => { idbAvailable = true; dbi.close(); migratePhotosToIDB().catch(e=>console.warn('Migration failed', e)); })
+                .catch(e => { idbAvailable = false; console.warn('IndexedDB no disponible:', e); showToast('Aviso: IndexedDB no disponible — fotos no persistirán entre sesiones'); });
+
+    $('user-display').textContent = currentUser ? currentUser.n : 'Iniciar';
+    renderNav();
+    render(currentUser?.role === 'admin' ? 'Admin' : 'Cocina');
+
+    // Attach backup input handler
+    $('backup-input').addEventListener('change', e => {
+      const f = e.target.files[0]; if(!f) return;
+      const fr = new FileReader();
+      fr.onload = () => {
+        try {
+          const json = JSON.parse(fr.result);
+          if(json && json.ingredientes && json.recetas){
+            if(!confirm('Restaurar backup sobrescribirá la BD local. Continuar?')) return;
+            db = json; save('Backup restaurado'); setTimeout(()=> location.reload(), 800);
+          } else showToast('Backup inválido');
+        } catch(err){ showToast('Error leyendo backup'); }
+      };
+      fr.readAsText(f); e.target.value='';
+    });
+
+    // Alb photo handler
+    $('alb-photo-input').addEventListener('change', async e => {
+      const f = e.target.files[0]; if(!f) return;
+      try {
+        const dataUrl = await resizeImageFile(f);
+        const panel = $('admin-panel');
+        if(panel){ panel.dataset.albPhoto = dataUrl; const prev = $('alb-photo-preview'); if(prev) prev.innerHTML = `<img src="${dataUrl}" class="preview">`; }
+        else { window._transientAlbPhoto = dataUrl; }
+      } catch(err){ showToast('Error procesando imagen'); console.warn(err); }
+      e.target.value = '';
+    });
+
+    // Alerts btn (already attached in earlier versions but safe)
+    const alertsBtn = $('alerts-btn'); if(alertsBtn) alertsBtn.addEventListener('click', showAlertsModal);
+  })();
+
+})(); 
+</script>
 </body>
 </html>

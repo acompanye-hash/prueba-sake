@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>ARUME V125 · Platinum</title>
+    <title>ARUME V130 · IVA Edition</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,7 +11,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* ESTÉTICA V125 */
+        /* ESTÉTICA V130 */
         body { font-family: 'Poppins', sans-serif; background: #f8fafc; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; user-select: none; }
         
         .glass-card { 
@@ -33,11 +33,11 @@
 
         .btn-ghost { background: #f1f5f9; color: #475569; font-weight: 600; padding: 10px; border-radius: 12px; width: 100%; cursor: pointer; transition: 0.2s; }
         
-        /* BOTONES DE ACCIÓN RÁPIDA (ALBARANES Y STOCK) */
-        .btn-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: 0.2s; border: none; }
-        .btn-edit { background: #eff6ff; color: #3b82f6; } /* Azul */
-        .btn-delete { background: #fef2f2; color: #ef4444; } /* Rojo */
-        .btn-merma { background: #fff7ed; color: #f97316; } /* Naranja */
+        /* BOTONES ACCIÓN */
+        .btn-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.9rem; cursor: pointer; transition: 0.2s; border: none; }
+        .btn-edit { background: #eff6ff; color: #3b82f6; }
+        .btn-delete { background: #fef2f2; color: #ef4444; }
+        .btn-merma { background: #fff7ed; color: #f97316; }
 
         .input-premium { 
             width: 100%; padding: 12px; background: #f8fafc; 
@@ -55,7 +55,7 @@
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; }
         .modal { background: white; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 24px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
         
-        /* NAV - FIJA ABAJO */
+        /* NAV */
         nav { 
             position: fixed; bottom: 0; left: 0; width: 100%; 
             background: white; padding: 12px 0; 
@@ -64,33 +64,21 @@
             z-index: 50; border-top: 1px solid #e2e8f0;
             padding-bottom: max(12px, env(safe-area-inset-bottom));
         }
-        nav button { flex: 1; background: none; border: none; color: #94a3b8; display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; font-weight: 600; transition: 0.2s; cursor:[...]
+        nav button { flex: 1; background: none; border: none; color: #94a3b8; display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; font-weight: 600; transition: 0.2s; cursor: pointer; }
         nav button.active { color: #4f46e5; transform: translateY(-2px); }
         nav button svg { width: 24px; height: 24px; fill: currentColor; margin-bottom: 4px; }
 
         /* PIN SCREEN */
         #pin-screen { background: #1e1b4b; position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .pin-btn { width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 600; c[...]
+        .pin-btn { width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
         .pin-btn:active { background: rgba(255,255,255,0.3); transform: scale(0.95); }
 
         .hidden { display: none !important; }
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
-        
-        /* ALÉRGENOS */
         .aller-tag { display: inline-block; width: 24px; height: 24px; text-align: center; line-height: 24px; background: #e0e7ff; border-radius: 50%; font-size: 0.8rem; margin-right: 2px; }
-
-        /* ALBARÁN TABLE */
-        .alb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .alb-table th, .alb-table td { padding: 8px 6px; border-bottom: 1px solid #f1f5f9; }
-        .alb-actions { display:flex; gap:8px; align-items:center; }
-        .small { font-size:12px; color:#6b7280; }
-        .muted { color:#9ca3af; font-size:12px; }
-
-        /* Mobile improvements for albaranes grid */
-        .alb-grid-row { display:flex; gap:8px; align-items:center; padding:8px; border-radius:12px; background:white; border:1px solid #f1f5f9; }
-        .alb-grid-row .flex-grow { flex:1 1 auto; min-width:120px; }
-        .alb-grid-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-        .alb-minwidth { min-width:720px; } /* ensures columns keep layout but container scrolls on small screens */
+        
+        /* TABLE STYLES */
+        .alb-grid-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 20px; gap: 5px; font-size: 0.7rem; color: #64748b; font-weight: bold; padding: 0 10px 5px 10px; }
     </style>
 </head>
 <body>
@@ -105,8 +93,8 @@
 
     <header class="sticky top-0 z-40 px-6 py-4 flex justify-between items-center bg-white/90 backdrop-blur border-b border-gray-100">
         <div>
-            <h1 class="text-2xl font-black text-gray-800 tracking-tight">ARUME <span class="text-indigo-600">V125</span></h1>
-            <p class="text-[10px] text-gray-400 font-bold tracking-widest uppercase">Platinum Edition</p>
+            <h1 class="text-2xl font-black text-gray-800 tracking-tight">ARUME <span class="text-indigo-600">V130</span></h1>
+            <p class="text-[10px] text-gray-400 font-bold tracking-widest uppercase">IVA Edition</p>
         </div>
         <div class="bg-gray-100 px-3 py-1 rounded-full text-xs font-bold text-gray-600 flex items-center gap-2 cursor-pointer hover:bg-gray-200 transition" onclick="logout()">
             <div id="sync-dot" class="w-2 h-2 rounded-full bg-gray-400"></div> <span id="user-name">Login</span>
@@ -146,7 +134,8 @@
 /* ================= 1. CONFIGURACIÓN ================= */
 const CONFIG = { 
     GOOGLE_URL: "https://script.google.com/macros/s/AKfycbxL0hWPiYmQ_590bkFjd1B9xwsfrYQXQtEuUpP2Nraq973bDr2rpEgVnaJCpI3-DH8z/exec", 
-    COST_HOUR: 15
+    COST_HOUR: 15,
+    DEFAULT_IVA: 10
 };
 
 const ALLERGENS = [
@@ -187,7 +176,8 @@ function toast(msg, type='info') {
 
 function init() {
     try {
-        const stored = localStorage.getItem('arume_v125') || localStorage.getItem('arume_v121') || localStorage.getItem('arume_v115');
+        // Carga escalonada de versiones anteriores
+        const stored = localStorage.getItem('arume_v130') || localStorage.getItem('arume_v125') || localStorage.getItem('arume_v121');
         if(stored) db = secure.dec(stored);
     } catch(e) { console.warn("DB reset"); }
     
@@ -202,7 +192,7 @@ function init() {
 async function save(msg){
     loading(true);
     db.lastSync = Date.now();
-    localStorage.setItem('arume_v125', secure.enc(db));
+    localStorage.setItem('arume_v130', secure.enc(db));
     if(CONFIG.GOOGLE_URL) await fetch(CONFIG.GOOGLE_URL, {method:'POST', mode:'no-cors', body:JSON.stringify(db)}).catch(()=>{});
     loading(false);
     if(msg) toast(msg);
@@ -215,7 +205,7 @@ async function sync(){
     try {
         const r = await fetch(CONFIG.GOOGLE_URL);
         const c = await r.json();
-        if(c && c.lastSync > (db.lastSync||0)) { db=c; localStorage.setItem('arume_v125', secure.enc(db)); location.reload(); }
+        if(c && c.lastSync > (db.lastSync||0)) { db=c; localStorage.setItem('arume_v130', secure.enc(db)); location.reload(); }
         if(dot) dot.className="w-2 h-2 rounded-full bg-green-500 shadow-lg shadow-green-500/50";
     } catch(e){ if(dot) dot.className="w-2 h-2 rounded-full bg-red-500"; }
 }
@@ -238,7 +228,7 @@ function renderNav() {
         {id:'Diario', l:'Caja', i:'<path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>'},
         {id:'Admin', l:'Gestión', i:'<path d="M12 2L3 5v6c0 5 3.8 9.7 9 11 5.2-1.3 9-6 9-11V5l-9-3z"/>'},
         {id:'Cocina', l:'Cocina', i:'<path d="M12 2C8.1 6 7 8 7 11c0 3.9 3.1 7 7 7s7-3.1 7-7c0-3-1.1-5-5-9z"/>'},
-        {id:'Stock', l:'Stock', i:'<path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-[...]
+        {id:'Stock', l:'Stock', i:'<path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 1-1-.45-1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 1-1-.45-1-1z"/>'}
     ];
     document.getElementById('navbar').innerHTML = views.map(v => `<button id="btn-${v.id}" onclick="render('${v.id}')"><svg viewBox="0 0 24 24">${v.i}</svg><span>${v.l}</span></button>`).join('');
 }
@@ -257,9 +247,9 @@ function render(view) {
 function renderAdmin(app) {
     app.innerHTML = `
         <div class="flex gap-2 mb-6 bg-white p-1 rounded-2xl shadow-sm border border-gray-100">
-            <button class="flex-1 py-2.5 rounded-xl font-bold text-xs transition ${activeAdminTab==='albaranes'?'bg-indigo-100 text-indigo-700 shadow-sm':''}" onclick="activeAdminTab='albaranes';renderAdmin(document.getElementById('app'))">Albaranes</button>
-            <button class="flex-1 py-2.5 rounded-xl font-bold text-xs transition ${activeAdminTab==='facturas'?'bg-indigo-100 text-indigo-700 shadow-sm':''}" onclick="activeAdminTab='facturas';renderAdmin(document.getElementById('app'))">Facturas</button>
-            <button class="flex-1 py-2.5 rounded-xl font-bold text-xs transition ${activeAdminTab==='omnes'?'bg-indigo-100 text-indigo-700 shadow-sm':''}" onclick="activeAdminTab='omnes';renderAdmin(document.getElementById('app'))">Omnes</button>
+            <button class="flex-1 py-2.5 rounded-xl font-bold text-xs transition ${activeAdminTab==='albaranes'?'bg-indigo-100 text-indigo-700 shadow-sm':''}" onclick="activeAdminTab='albaranes';renderAdmin(document.getElementById('app'))">ENTRADAS</button>
+            <button class="flex-1 py-2.5 rounded-xl font-bold text-xs transition ${activeAdminTab==='facturas'?'bg-indigo-100 text-indigo-700 shadow-sm':''}" onclick="activeAdminTab='facturas';renderAdmin(document.getElementById('app'))">FACTURAS</button>
+            <button class="flex-1 py-2.5 rounded-xl font-bold text-xs transition ${activeAdminTab==='omnes'?'bg-indigo-100 text-indigo-700 shadow-sm':''}" onclick="activeAdminTab='omnes';renderAdmin(document.getElementById('app'))">OMNES 4P</button>
         </div>
         <div id="adm-c"></div>
     `;
@@ -269,12 +259,10 @@ function renderAdmin(app) {
     if(activeAdminTab==='facturas') renderFacturas(c);
 }
 
-/* ------------------ ALBARANES (MEJORADO CON IVA) ------------------ */
+/* ------------------ ALBARANES (IVA INTEGRADO V130) ------------------ */
 function renderAlbaranes(c) {
-    // Prepare provider datalist
     const provOptions = db.proveedores.map(p=>`<option value="${clean(p.n)}">`).join('');
-    const nextNum = `A-${new Date().getFullYear().toString().slice(-2)}-${(db.albaranes.length+1).toString().padStart(4,'0')}`;
-
+    
     c.innerHTML = `
         <div class="glass-card">
             <h3 class="font-bold text-gray-700 mb-4 text-sm uppercase flex justify-between items-center">
@@ -282,36 +270,28 @@ function renderAlbaranes(c) {
                 <span id="edit-mode-indicator" class="hidden text-[10px] bg-yellow-100 text-yellow-700 px-2 py-1 rounded">✏️ EDITANDO</span>
             </h3>
 
-            <div class="grid grid-cols-3 gap-4 mb-4">
-                <div><label>Proveedor</label><input list="prov-list" id="alb-prov" class="input-premium" placeholder="..."><datalist id="prov-list">${provOptions}</datalist></div>
-                <div><label>Productor (nombre)</label><input id="alb-producer" class="input-premium" placeholder="Productor..."></div>
-                <div><label>Nº Albarán</label><input id="alb-num" class="input-premium" value="${nextNum}"></div>
-            </div>
-
             <div class="grid grid-cols-2 gap-4 mb-4">
+                <div><label>Proveedor</label><input list="prov-list" id="alb-prov" class="input-premium" placeholder="..."><datalist id="prov-list">${provOptions}</datalist></div>
                 <div><label>Fecha</label><input type="date" id="alb-date" value="${getISO()}" class="input-premium"></div>
-                <div><label>Nota / Observaciones</label><input id="alb-note" class="input-premium" placeholder="Opcional..."></div>
             </div>
 
-            <textarea id="alb-input" rows="4" class="input-premium font-mono text-xs" placeholder="Pegar: Producto, Cantidad[unidad], Precio [, Descuento, IVA%]. Ej: Harina, 10 kg, 0.50, 0%, 21%"></textarea>
+            <textarea id="alb-input" rows="4" class="input-premium font-mono text-xs" placeholder="Pegar: Producto, Cantidad, Precio, Dto(opc), IVA(opc). Ej: Vino, 6, 12.50, 0, 21"></textarea>
             <div class="flex gap-2 mt-2 mb-4">
                 <button class="btn-ghost" onclick="parseAlb()">🪄 Leer Texto</button>
                 <button class="btn-ghost" onclick="tempItems=[];renderAlbGrid()">Limpiar</button>
-                <button class="btn-ghost" onclick="showAlbImportHelp()">?</button>
             </div>
 
-            <div id="alb-grid" class="space-y-2 mb-4 alb-grid-scroll"></div>
+            <div class="alb-grid-header">
+                <div>PROD</div><div>CANT</div><div>€/UD</div><div>DTO</div><div>IVA</div><div>SUBT</div><div></div>
+            </div>
+            <div id="alb-grid" class="space-y-2 mb-4"></div>
 
-            <div class="flex justify-between items-center mb-4">
-                <div class="muted">Subtotal: <span id="alb-subtotal">0.00€</span> · IVA: <span id="alb-tax">0.00€</span></div>
+            <div class="flex justify-between items-center mb-4 border-t pt-4">
+                <div class="text-xs text-gray-400 font-bold uppercase">TOTAL + IVA</div>
                 <div class="font-black text-2xl text-indigo-600" id="alb-total">0.00€</div>
             </div>
 
-            <div class="grid grid-cols-3 gap-3 mb-2">
-                <button class="btn-premium" onclick="commitAlb()">CONFIRMAR ENTRADA</button>
-                <button class="btn-ghost" onclick="save('Borrador guardado')">GUARDAR Borrador</button>
-                <button class="btn-ghost" onclick="exportAlbCSV()">EXPORTAR CSV</button>
-            </div>
+            <button class="btn-premium" onclick="commitAlb()">CONFIRMAR ENTRADA</button>
         </div>
         
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mt-4">
@@ -319,20 +299,15 @@ function renderAlbaranes(c) {
             ${db.albaranes.slice().reverse().map(a => `
                 <div class="flex justify-between items-center py-3 border-b border-gray-50 last:border-0">
                     <div>
-                        <div class="font-bold text-gray-800 text-sm">${clean(a.prov || a.productor)}</div>
-                        <div class="text-[10px] text-gray-400 font-bold">#${clean(a.num || '')} · ${a.date}</div>
+                        <div class="font-bold text-gray-800 text-sm">${clean(a.prov)}</div>
+                        <div class="text-[10px] text-gray-400 font-bold">${a.date}</div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button class="small muted" onclick="viewAlbDetails('${a.id}')">VER</button>
                         <span class="font-mono font-bold text-gray-700 mr-2">${a.total.toFixed(2)}€</span>
                         ${!a.invoiced ? `
                             <button class="btn-icon btn-edit" onclick="editAlb('${a.id}')">✏️</button>
                             <button class="btn-icon btn-delete" onclick="deleteAlb('${a.id}')">🗑️</button>
-                        ` : `
-                            <button class="btn-icon btn-edit opacity-50" onclick="editAlb('${a.id}')">✏️</button>
-                            <button class="btn-icon btn-delete opacity-50" onclick="deleteAlb('${a.id}')">🗑️</button>
-                            <span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded font-bold">F</span>
-                        `}
+                        ` : '<span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded font-bold">F</span>'}
                     </div>
                 </div>
             `).join('')}
@@ -340,256 +315,111 @@ function renderAlbaranes(c) {
     renderAlbGrid();
 }
 
-function showAlbImportHelp(){
-    showModal('Ayuda: Formato de importación', `<div class="text-sm space-y-2">
-        <p>Formato recomendado por línea (se aceptan comas o tabulaciones):</p>
-        <ul class="list-disc pl-5">
-            <li><b>Producto, Cantidad unidad, Precio, Descuento(optional), IVA(optional)</b></li>
-            <li>Ejemplos: <code>Harina, 10 kg, 0.50, 0%, 21%</code> o <code>Huevos 30 ud 0.10 10%</code></li>
-            <li>Descuento puede ser absoluto (ej. 1.50) o porcentual (ej. 5%). IVA por defecto: 21% si no se indica.</li>
-        </ul>
-    </div>`);
-}
-
 function parseAlb() {
     const txt = document.getElementById('alb-input').value.trim(); tempItems = [];
-    if(!txt) return toast("No hay texto para leer", "error");
+    if(!txt) return toast("Texto vacío", "error");
 
-    const lines = txt.split(/\r?\n/).map(l=>l.trim()).filter(l=>l);
-    lines.forEach(l => {
-        // Try CSV-like split first
-        let parts = l.split(',').map(p=>p.trim()).filter(p=>p);
-        if(parts.length===1) parts = l.split(/\t/).map(p=>p.trim()).filter(p=>p);
+    txt.split(/\r?\n/).forEach(l => {
+        if(!l.trim()) return;
+        // Detectar separadores: tabulacion o coma
+        let parts = l.split('\t');
+        if(parts.length < 2) parts = l.split(','); // Si no hay tabs, usa comas
+        if(parts.length < 2) parts = l.split(/\s{2,}/); // Si no, espacios dobles
 
-        let name = '', qty = 1, price = 0, unit = 'ud', discount = 0, discountType = 'abs', iva = null;
-        if(parts.length>=2){
-            name = parts[0];
-            // Parse qty and unit from parts[1]
-            const qmatch = parts[1].match(/^([\d\.,\/]+)\s*(kg|g|gr|l|lt|ml|ud|u|pcs|unidad|un)$/i);
-            if(qmatch){ qty = parseFloat(String(qmatch[1]).replace(',','.')) || 1; unit = normalizeUnit(qmatch[2]); }
-            else {
-                const maybeNum = parseFloat(parts[1].replace(',','.'));
-                if(!isNaN(maybeNum)) qty = maybeNum;
-                // try to extract unit token at end of name
-                const nm = name.match(/(.+)\s+(\d+)\s*(kg|g|l|lt|ud|u|pcs|unidad|un)$/i);
-                if(nm){ name = nm[1].trim(); qty = parseFloat(nm[2]); unit = normalizeUnit(nm[3]); }
-            }
-            // Price
-            if(parts.length>=3){
-                price = parseFloat(String(parts[2]).replace(',','.')) || 0;
-            } else {
-                // try to find number in rest
-                const found = parts.slice(1).join(' ').match(/([\d\.,]+)\s*€?/);
-                if(found) price = parseFloat(String(found[1]).replace(',','.')) || 0;
-            }
-            // Discount
-            if(parts.length>=4){
-                const d = parts[3];
-                if(String(d).includes('%')) { discountType='pct'; discount = parseFloat(String(d).replace('%','').replace(',','.')) || 0; }
-                else discount = parseFloat(String(d).replace(',','.')) || 0;
-            }
-            // IVA (optional) - part 5 (index 4)
-            if(parts.length>=5){
-                const iv = String(parts[4]).trim();
-                if(iv) {
-                    iva = parseFloat(iv.replace('%','').replace(',','.')) || null;
-                }
-            }
-        } else {
-            // fallback: try to extract numbers from the line
-            const nums = l.match(/[\d\.,]+/g) || [];
-            name = l.replace(/[\d\.,]+/g,'').replace(/[kg|g|gr|l|lt|ml|ud|u|pcs|unidad|un]/gi,'').trim();
-            if(nums.length===1) price = parseFloat(nums[0].replace(',','.')) || 0;
-            if(nums.length>=2) { qty = parseFloat(nums[0].replace(',','.'))||1; price = parseFloat(nums[1].replace(',','.'))||0; }
-            // detect unit token
-            const um = l.match(/\b(kg|g|gr|l|lt|ml|ud|u|pcs|unidad|un)\b/i);
-            if(um) unit = normalizeUnit(um[1]);
-            // detect iva at end like '21%'
-            const ivm = l.match(/(\d{1,2}(\,\d+)?|\d{1,3})\s*%$/);
-            if(ivm) iva = parseFloat(ivm[1].replace(',','.')) || null;
+        // Parseo flexible
+        let name = parts[0].trim();
+        let qty = 1, price = 0, disc = 0, iva = CONFIG.DEFAULT_IVA;
+
+        // Intentar leer columnas posicionales
+        if(parts.length >= 2) qty = parseFloat(parts[1].replace(',','.')) || 1;
+        if(parts.length >= 3) price = parseFloat(parts[2].replace(',','.')) || 0;
+        if(parts.length >= 4) {
+            let d = parts[3].replace(',','.').replace('%','');
+            disc = parseFloat(d) || 0;
+        }
+        if(parts.length >= 5) {
+            let i = parts[4].replace(',','.').replace('%','');
+            iva = parseFloat(i) || CONFIG.DEFAULT_IVA;
         }
 
-        // Default IVA to 21% if not provided
-        if(iva === null || isNaN(iva)) iva = 21;
-
-        if(price>0 && name) {
-            tempItems.push({ n: name.trim(), q: qty, p: price, unit, d: discount, dType: discountType, iva });
+        if(price > 0) {
+            tempItems.push({ n: name, q: qty, p: price, d: disc, iva: iva });
         }
     });
     renderAlbGrid();
-}
-
-function normalizeUnit(u){
-    if(!u) return 'ud';
-    u = String(u).toLowerCase();
-    if(u.startsWith('kg') || u==='gr' || u==='g' || u==='grs') return u.includes('g') && u!=='kg' ? 'g' : (u==='g'?'g':u==='gr'?'g':'kg');
-    if(u.startsWith('l') || u==='lt' || u==='ml') return u.includes('ml') ? 'ml' : 'l';
-    if(u==='ud' || u==='u' || u==='unidad' || u==='un' || u==='pcs') return 'ud';
-    return 'ud';
 }
 
 function renderAlbGrid() {
     const container = document.getElementById('alb-grid');
     if(!container) return;
-    const rows = tempItems.map((it,i) => {
-        const subtotal = calcLineSubtotal(it);
-        return `<div class="alb-grid-row alb-minwidth" style="display:flex;gap:8px;align-items:center;">
-            <input value="${clean(it.n)}" class="flex-grow bg-transparent text-sm font-bold outline-none" onchange="tempItems[${i}].n=this.value">
-            <input type="number" value="${it.q}" class="w-20 bg-gray-50 rounded text-center text-xs p-1" onchange="tempItems[${i}].q=parseFloat(this.value)||0;renderAlbGrid()">
-            <select onchange="tempItems[${i}].unit=this.value;renderAlbGrid()" class="w-20 input-premium p-1 text-xs bg-gray-50">
-                <option ${it.unit==='ud'?'selected':''} value="ud">ud</option>
-                <option ${it.unit==='kg'?'selected':''} value="kg">kg</option>
-                <option ${it.unit==='g'?'selected':''} value="g">g</option>
-                <option ${it.unit==='l'?'selected':''} value="l">l</option>
-                <option ${it.unit==='ml'?'selected':''} value="ml">ml</option>
-            </select>
-            <input type="number" step="0.01" value="${it.p}" class="w-20 bg-gray-50 rounded text-center text-xs p-1" onchange="tempItems[${i}].p=parseFloat(this.value)||0;renderAlbGrid()">
-            <input type="text" value="${it.d + (it.dType==='pct' ? '%' : '')}" class="w-20 bg-gray-50 rounded text-center text-xs p-1" onchange="parseDiscount(${i}, this.value)">
-            <input type="text" value="${it.iva || 21}%" class="w-20 bg-gray-50 rounded text-center text-xs p-1" onchange="parseIva(${i}, this.value)">
-            <div class="font-mono font-bold w-28 text-right">${subtotal.toFixed(2)}€</div>
-            <button class="text-red-400 px-2" onclick="tempItems.splice(${i},1);renderAlbGrid()">✕</button>
+    
+    let total = 0;
+    
+    container.innerHTML = tempItems.map((it,i) => {
+        // Cálculo línea: (Precio * Cant - Dto) * (1 + IVA)
+        const base = (it.p * it.q);
+        const discountVal = (it.d > 0) ? (base * (it.d/100)) : 0; // Asumimos dto es %
+        const net = base - discountVal;
+        const tax = net * (it.iva/100);
+        const subtotal = net + tax;
+        total += subtotal;
+
+        return `<div class="bg-white p-2 rounded-xl border border-gray-100 grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_20px] gap-2 items-center animate-[fadeIn_0.2s]">
+            <input value="${clean(it.n)}" class="bg-transparent text-sm font-bold outline-none w-full" onchange="tempItems[${i}].n=this.value">
+            <input type="number" value="${it.q}" class="bg-gray-50 rounded text-center text-xs p-1 w-full" onchange="tempItems[${i}].q=parseFloat(this.value)||0;renderAlbGrid()">
+            <input type="number" value="${it.p}" class="bg-gray-50 rounded text-center text-xs p-1 w-full" onchange="tempItems[${i}].p=parseFloat(this.value)||0;renderAlbGrid()">
+            <input type="number" value="${it.d}" class="bg-gray-50 rounded text-center text-xs p-1 w-full text-blue-600" onchange="tempItems[${i}].d=parseFloat(this.value)||0;renderAlbGrid()">
+            <input type="number" value="${it.iva}" class="bg-gray-50 rounded text-center text-xs p-1 w-full text-orange-500 font-bold" onchange="tempItems[${i}].iva=parseFloat(this.value)||0;renderAlbGrid()">
+            <div class="font-mono font-bold text-right text-xs">${subtotal.toFixed(2)}€</div>
+            <button class="text-red-400 hover:text-red-600 font-bold" onclick="tempItems.splice(${i},1);renderAlbGrid()">✕</button>
         </div>`;
     }).join('');
-    container.innerHTML = rows || `<div class="muted">No hay líneas todavía</div>`;
 
-    // totals: base, tax and total
-    const subtotalBase = tempItems.reduce((a,b)=>a+calcLineSubtotal(b,true,false),0); // base without tax
-    const totalTax = tempItems.reduce((a,b)=>a+calcLineTax(b,true),0);
-    const total = subtotalBase + totalTax;
-    document.getElementById('alb-subtotal').innerText = subtotalBase.toFixed(2)+'€';
-    document.getElementById('alb-tax').innerText = totalTax.toFixed(2)+'€';
     document.getElementById('alb-total').innerText = total.toFixed(2)+'€';
-}
-
-function parseDiscount(index, value){
-    const v = String(value).trim();
-    if(v.includes('%')) { tempItems[index].dType='pct'; tempItems[index].d=parseFloat(v.replace('%','').replace(',','.'))||0; }
-    else { tempItems[index].dType='abs'; tempItems[index].d=parseFloat(v.replace(',','.'))||0; }
-    renderAlbGrid();
-}
-
-function parseIva(index, value){
-    const v = String(value).trim();
-    const num = parseFloat(v.replace('%','').replace(',','.')) || 0;
-    tempItems[index].iva = num;
-    renderAlbGrid();
-}
-
-// calcLineSubtotal now can return base-only or base+tax depending on flags
-// If includeTax === undefined or true -> returns base + tax (used for row subtotal display)
-// If includeTax === false -> returns base only (used for some totals if needed)
-function calcLineSubtotal(it, avoidMutate, includeTax = true){
-    const q = parseFloat(it.q)||0;
-    const p = parseFloat(it.p)||0;
-    let base = q * p;
-    if(it.d){
-        if(it.dType==='pct') base -= (base * (parseFloat(it.d)||0)/100);
-        else base -= parseFloat(it.d)||0;
-    }
-    const ivaPct = (parseFloat(it.iva) || 0) / 100;
-    const tax = base * ivaPct;
-    const totalLine = includeTax ? (base + tax) : base;
-    if(!avoidMutate){
-        it._base = base;
-        it._tax = tax;
-        it._subtotal = totalLine;
-    }
-    return totalLine;
-}
-
-// helper that returns only tax for a line (optionally avoid mutating)
-function calcLineTax(it, avoidMutate){
-    const q = parseFloat(it.q)||0;
-    const p = parseFloat(it.p)||0;
-    let base = q * p;
-    if(it.d){
-        if(it.dType==='pct') base -= (base * (parseFloat(it.d)||0)/100);
-        else base -= parseFloat(it.d)||0;
-    }
-    const ivaPct = (parseFloat(it.iva) || 0) / 100;
-    const tax = base * ivaPct;
-    if(!avoidMutate){
-        it._base = base;
-        it._tax = tax;
-    }
-    return tax;
 }
 
 function commitAlb() {
     if(!tempItems.length) return toast("Lista vacía", "error");
     const prov = document.getElementById('alb-prov').value;
-    const producer = document.getElementById('alb-producer').value;
-    const num = document.getElementById('alb-num').value || generateID();
     const date = document.getElementById('alb-date').value;
-    const note = document.getElementById('alb-note').value || '';
-    if(!prov && !producer) return toast("Falta Proveedor o Productor", "error");
-    if(!date) return toast("Falta Fecha", "error");
+    if(!prov) return toast("Falta Proveedor", "error");
 
-    // Ensure provider stored
-    if(prov && !db.proveedores.find(p=>p.n===prov)) db.proveedores.push({n:prov});
+    if(!db.proveedores.find(p=>p.n===prov)) db.proveedores.push({n:prov});
 
-    // Update Stock
+    // Actualizar Stock (Precio Medio Ponderado SIN IVA, el stock se valora neto)
     tempItems.forEach(it => {
-        const nameLower = it.n.trim().toLowerCase();
-        // try find exact ingredient by name and same unit
-        let existing = db.ingredientes.find(x => x.n.toLowerCase() === nameLower && x.unit === it.unit);
-        if(existing) {
-            // update average cost and stock
-            const prevStock = parseFloat(existing.stock)||0;
-            const prevCost = parseFloat(existing.cost)||0;
-            const addQty = parseFloat(it.q)||0;
-            const addCost = parseFloat(it.p)||0;
-            // weighted average cost per unit
-            existing.cost = prevStock+addQty > 0 ? (((prevStock*prevCost) + (addQty*addCost)) / (prevStock+addQty)) : addCost;
-            existing.stock = prevStock + addQty;
+        let i = db.ingredientes.find(x => x.n.toLowerCase() === it.n.trim().toLowerCase());
+        const netPrice = it.p * (1 - (it.d/100)); // Precio unitario neto descontado
+        
+        if(i) {
+            const oldVal = i.stock * i.cost;
+            const newVal = it.q * netPrice;
+            const newStock = i.stock + it.q;
+            if(newStock > 0) i.cost = (oldVal + newVal) / newStock;
+            i.stock = newStock;
         } else {
-            // if ingredient with same name but different unit exists, create a new variant to preserve unit correctness
-            const other = db.ingredientes.find(x => x.n.toLowerCase() === nameLower);
-            if(other && other.unit !== it.unit) {
-                // create new ingredient variant with unit suffix
-                const newName = `${it.n} (${it.unit})`;
-                db.ingredientes.push({id:generateID(), n:newName, stock:it.q, cost:it.p, min:0, unit:it.unit, aller:[]});
-            } else {
-                // create new
-                db.ingredientes.push({id:generateID(), n:it.n, stock:it.q, cost:it.p, min:0, unit:it.unit, aller:[]});
-            }
+            db.ingredientes.push({id:generateID(), n:it.n.trim(), stock:it.q, cost:netPrice, min:0, unit:'ud', aller:[]});
         }
     });
 
-    // compute totals (store base and total)
-    const subtotalBase = tempItems.reduce((a,b)=>a+calcLineSubtotal(b,true,false),0);
-    const totalTax = tempItems.reduce((a,b)=>a+calcLineTax(b,true),0);
-    const total = subtotalBase + totalTax;
-
+    const total = parseFloat(document.getElementById('alb-total').innerText);
     db.albaranes.push({
         id:generateID(),
-        num,
-        prov: prov || '',
-        productor: producer || '',
-        date,
-        note,
-        items: JSON.parse(JSON.stringify(tempItems)),
-        subtotal: subtotalBase,
-        tax: totalTax,
-        total: total,
+        date, prov, 
+        items: JSON.parse(JSON.stringify(tempItems)), 
+        total, 
         invoiced:false
     });
 
-    save("Entrada guardada"); 
-    tempItems = []; 
-    renderAdmin(document.getElementById('app'));
+    save("Entrada guardada"); tempItems=[]; renderAdmin(document.getElementById('app'));
 }
 
 function deleteAlb(id) {
     const alb = db.albaranes.find(a => a.id === id);
     if(!alb) return;
-    
-    let warning = "¿Borrar y RESTAR stock?";
-    if (alb.invoiced) warning = "⚠️ ¡ESTÁ FACTURADO! \nSi borras esto, la factura perderá su origen.\n¿Borrar igualmente y restar stock?";
-
-    if(confirm(warning)) {
+    if(confirm("¿Borrar y RESTAR stock?")) {
         alb.items.forEach(it => {
-            const i = db.ingredientes.find(x => x.n.toLowerCase() === it.n.toLowerCase() && x.unit === it.unit);
+            const i = db.ingredientes.find(x => x.n.toLowerCase() === it.n.toLowerCase());
             if(i) i.stock = Math.max(0, i.stock - it.q);
         });
         db.albaranes = db.albaranes.filter(a => a.id !== id);
@@ -603,15 +433,12 @@ function editAlb(id) {
     if(!alb) return;
     if(confirm("¿Editar? Se revertirá el stock para que corrijas.")) {
         alb.items.forEach(it => {
-            const i = db.ingredientes.find(x => x.n.toLowerCase() === it.n.toLowerCase() && x.unit === it.unit);
+            const i = db.ingredientes.find(x => x.n.toLowerCase() === it.n.toLowerCase());
             if(i) i.stock = Math.max(0, i.stock - it.q);
         });
         tempItems = JSON.parse(JSON.stringify(alb.items));
         document.getElementById('alb-prov').value = alb.prov;
-        document.getElementById('alb-producer').value = alb.productor || '';
-        document.getElementById('alb-num').value = alb.num || '';
         document.getElementById('alb-date').value = alb.date;
-        document.getElementById('alb-note').value = alb.note || '';
         document.getElementById('edit-mode-indicator').classList.remove('hidden');
         renderAlbGrid();
         db.albaranes = db.albaranes.filter(a => a.id !== id);
@@ -619,48 +446,18 @@ function editAlb(id) {
     }
 }
 
-function viewAlbDetails(id){
-    const a = db.albaranes.find(x=>x.id===id);
-    if(!a) return;
-    const rows = a.items.map(it => {
-        const subtotalBase = (it.q * it.p) - ((it.d && it.dType==='pct') ? ((it.q * it.p) * (it.d/100)) : (it.d || 0));
-        const tax = subtotalBase * ((it.iva||0)/100);
-        const subtotal = subtotalBase + tax;
-        return `<tr>
-            <td>${clean(it.n)}</td>
-            <td class="small">${it.q} ${it.unit}</td>
-            <td class="small">${it.p.toFixed(2)}€</td>
-            <td class="small">${it.d ? (it.dType==='pct' ? it.d+'%' : it.d.toFixed(2)+'€') : '-'}</td>
-            <td class="small text-center">${(it.iva||0)}%</td>
-            <td class="font-mono text-right">${subtotal.toFixed(2)}€</td>
-        </tr>`;
-    }).join('');
-    showModal(`Albarán #${clean(a.num||'')}`, `<div class="text-sm muted mb-3">${clean(a.prov||a.productor||'')} · ${a.date}</div>
-        <div class="overflow-x-auto"><table class="alb-table w-full"><thead><tr class="alb-header"><th>Producto</th><th>Un.</th><th>Precio</th><th>Descto</th><th>IVA</th><th class="text-right">Total</th></tr></thead><tbody>${rows}</tbody></table></div>
-        <div class="flex justify-end items-center pt-4"><div class="font-black text-xl">${(a.total||0).toFixed(2)}€</div></div>
-        <div class="mt-4"><button class="btn-ghost" onclick="closeModal()">Cerrar</button></div>`);
-}
-
-function exportAlbCSV(){
-    if(!tempItems.length) return toast("Sin líneas para exportar", "error");
-    const header = ['Producto','Cantidad','Unidad','Precio','Descuento','IVA','Subtotal'];
-    const rows = tempItems.map(it => [it.n, it.q, it.unit, it.p, (it.dType==='pct'?it.d+'%':it.d), (it.iva||21)+'%', calcLineSubtotal(it,false).toFixed(2)]);
-    const csv = [header, ...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download = `albaran_${getISO()}.csv`; a.click();
-}
-
 /* FACTURAS */
 function renderFacturas(c) {
     const pends = db.albaranes.filter(a=>!a.invoiced);
     const groups={}; pends.forEach(a=>{ if(!groups[a.prov]) groups[a.prov]={c:0,t:0,ids:[]}; groups[a.prov].c++; groups[a.prov].t+=a.total; groups[a.prov].ids.push(a.id); });
     c.innerHTML = `
-    ${Object.keys(groups).length ? `<div class="glass-card"><h3 class="font-bold text-xs text-gray-400 mb-3 uppercase">Pendiente Facturar</h3>${Object.entries(groups).map(([p,d])=>`<div class="flex ju[...]
-    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100"><h3 class="font-bold text-xs text-gray-400 mb-4 uppercase">Histórico</h3>${db.facturas.slice().reverse().map(f => `<div clas[...]
+    ${Object.keys(groups).length ? `<div class="glass-card"><h3 class="font-bold text-xs text-gray-400 mb-3 uppercase">Pendiente Facturar</h3>${Object.entries(groups).map(([p,d])=>`<div class="flex justify-between items-center py-2 border-b last:border-0"><div><div class="font-bold text-gray-800">${clean(p)}</div><div class="text-xs text-gray-400">${d.c} entradas</div></div><div class="flex items-center gap-3"><span class="font-bold">${d.t.toFixed(2)}€</span><button class="bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm" onclick="invoice('${p}','${d.ids}')">GENERAR</button></div></div>`).join('')}</div>` : ''}
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100"><h3 class="font-bold text-xs text-gray-400 mb-4 uppercase">Histórico</h3>${db.facturas.slice().reverse().map(f => `<div class="flex justify-between items-center py-3 border-b border-gray-50 last:border-0"><div><div class="font-bold text-gray-800">${clean(f.prov)}</div><div class="text-[10px] text-gray-400">${f.date}</div></div><div class="text-right"><div class="font-mono font-bold text-gray-700">${f.total.toFixed(2)}€</div><div class="text-[10px] font-bold cursor-pointer ${f.paid?'text-green-500':'text-red-500'}" onclick="togglePaid('${f.id}')">${f.paid?'PAGADO':'PENDIENTE'}</div></div></div>`).join('')}</div><button class="btn-ghost mt-6" onclick="downloadBackup()">💾 COPIA SEGURIDAD</button>`;
 }
-function invoice(p,ids){ const l=ids.split(','); l.forEach(id=>{ const a=db.albaranes.find(x=>x.id===id); if(a) a.invoiced=true; }); const t=l.reduce((ac,id)=>ac+(db.albaranes.find(x=>x.id===id)?.tota[...]
+function invoice(p,ids){ const l=ids.split(','); l.forEach(id=>{ const a=db.albaranes.find(x=>x.id===id); if(a) a.invoiced=true; }); const t=l.reduce((ac,id)=>ac+(db.albaranes.find(x=>x.id===id)?.total||0),0); db.facturas.push({id:generateID(), date:getISO(), prov:p, total:t, paid:false}); save("Factura creada"); renderAdmin(document.getElementById('app')); }
 function togglePaid(id){ const f=db.facturas.find(x=>x.id===id); if(f){ f.paid=!f.paid; save(); renderAdmin(document.getElementById('app')); }}
 
-/* OMNES */
+/* OMNES & BCG */
 function renderOmnes(c) {
     const prices = (db.recetas||[]).map(r=>r.pvp).filter(p=>p>0).sort((a,b)=>a-b);
     const minP = prices[0]||0, maxP = prices[prices.length-1]||0;
@@ -668,78 +465,70 @@ function renderOmnes(c) {
     let totalSales=0, stars=0, plows=0, puzzles=0, dogs=0;
     (db.recetas||[]).forEach(r => totalSales += (r.sales||0));
     const avgPop = totalSales > 0 ? (100/db.recetas.length)*0.7 : 0;
-    (db.recetas||[]).forEach(r => { const cost = calcRecipe(r).t; const margin = (r.pvp||0) - cost; const pop = totalSales>0 ? ((r.sales||0)/totalSales)*100 : 0; if(pop>=avgPop && margin>=6) stars++; [...]
+    (db.recetas||[]).forEach(r => { const cost = calcRecipe(r).t; const margin = (r.pvp||0) - cost; const pop = totalSales>0 ? ((r.sales||0)/totalSales)*100 : 0; if(pop>=avgPop && margin>=6) stars++; else if(pop>=avgPop && margin<6) plows++; else if(pop<avgPop && margin>=6) puzzles++; else dogs++; });
     c.innerHTML = `
-        <div class="glass-card"><div class="flex justify-between items-center bg-gray-50 p-4 rounded-xl mb-4"><div class="text-center"><div class="text-[10px] text-gray-400 font-bold">RANGO OMNES</div[...]
+        <div class="glass-card"><div class="flex justify-between items-center bg-gray-50 p-4 rounded-xl mb-4"><div class="text-center"><div class="text-[10px] text-gray-400 font-bold">RANGO OMNES</div><div class="text-2xl font-black text-gray-800">${gama}</div></div><div class="h-8 w-px bg-gray-200"></div><div class="text-center"><div class="text-[10px] text-gray-400 font-bold">ESTADO</div><div class="text-sm font-bold ${gama<=3?'text-green-500':'text-red-500'}">${gama<=3?'OPTIMIZADO':'DESBALANCEADO'}</div></div></div><div class="grid grid-cols-2 gap-3"><div class="bg-emerald-50 text-emerald-800 p-3 rounded-xl text-center border border-emerald-100"><div class="text-2xl font-black">${stars}</div><div class="text-[10px] font-bold">ESTRELLAS</div></div><div class="bg-amber-50 text-amber-800 p-3 rounded-xl text-center border border-amber-100"><div class="text-2xl font-black">${plows}</div><div class="text-[10px] font-bold">CABALLOS</div></div><div class="bg-blue-50 text-blue-800 p-3 rounded-xl text-center border border-blue-100"><div class="text-2xl font-black">${puzzles}</div><div class="text-[10px] font-bold">PUZZLES</div></div><div class="bg-red-50 text-red-800 p-3 rounded-xl text-center border border-red-100"><div class="text-2xl font-black">${dogs}</div><div class="text-[10px] font-bold">PERROS</div></div></div><button class="btn-premium mt-6" onclick="editSales()">📝 ACTUALIZAR VENTAS (TPV)</button></div>`;
 }
-function editSales() { const html = db.recetas.map(r => `<div class="flex justify-between items-center py-3 border-b border-gray-100"><span>${clean(r.n)}</span><input type="number" min="0" value="${r.[...]
+function editSales() { const html = db.recetas.map(r => `<div class="flex justify-between items-center py-3 border-b border-gray-100"><span>${clean(r.n)}</span><input type="number" min="0" value="${r.sales||0}" class="bg-gray-50 border border-gray-200 rounded-lg w-20 text-center py-2 font-bold" onchange="updateSale('${r.id}', this.value)"></div>`).join(''); showModal('Ventas Periodo', `<div class="max-h-[50vh] overflow-y-auto pr-2">${html}</div><button class="btn-premium mt-4" onclick="closeModal();renderAdmin(document.getElementById('app'))">Guardar y Recalcular</button>`); }
 function updateSale(id,v){ const r=db.recetas.find(x=>x.id===id); if(r){ r.sales=Math.max(0,parseFloat(v)); save(); }}
 
 /* ================= 6. COCINA ================= */
 function renderCocina(app) {
-    app.innerHTML = `<div class="glass-card"><div class="flex justify-between items-center mb-4"><h2 class="font-black text-xl text-gray-800">RECETARIO</h2><button class="btn-premium w-auto px-4 py-2 [...]
+    app.innerHTML = `<div class="glass-card"><div class="flex justify-between items-center mb-4"><h2 class="font-black text-xl text-gray-800">RECETARIO</h2><button class="btn-premium w-auto px-4 py-2 text-xs" onclick="editRec()">+ NUEVA</button></div>${db.recetas.map(r => { const c = calcRecipe(r); return `<div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-2 cursor-pointer hover:shadow-md transition" onclick="viewRec('${r.id}')"><div class="flex justify-between"><div class="font-bold text-gray-800">${clean(r.n)}</div><div class="font-black text-indigo-600">${c.t.toFixed(2)}€</div></div><div class="text-xs text-gray-400 mt-1">${c.all.map(k=>ALLERGENS.find(a=>a.k==k)?.i).join(' ')}</div></div>` }).join('')}</div>`;
 }
 function calcRecipe(r) {
     let t=0, all=new Set();
-    (r.items||[]).forEach(it => { if(it.type==='ing') { const i = db.ingredientes.find(x=>x.id===it.id); if(i) { const yieldFactor = (it.merma && it.merma > 0) ? (1 - (it.merma/100)) : 1; t += (it.q *[...]
+    (r.items||[]).forEach(it => { if(it.type==='ing') { const i = db.ingredientes.find(x=>x.id===it.id); if(i) { const yieldFactor = (it.merma && it.merma > 0) ? (1 - (it.merma/100)) : 1; t += (it.q * i.cost) / yieldFactor; (i.aller||[]).forEach(k=>all.add(k)); } } });
     t += (r.time/60)*CONFIG.COST_HOUR; return {t, all:Array.from(all)};
 }
 function editRec(id) {
     const r = id ? db.recetas.find(x=>x.id===id) : {id:generateID(), n:'', pvp:0, time:10, items:[]};
     tempItems = JSON.parse(JSON.stringify(r.items));
-    showModal('Ficha Técnica', `<div class="grid grid-cols-2 gap-4 mb-4"><div class="col-span-2"><label>Nombre</label><input id="er-n" value="${clean(r.n)}" class="input-premium"></div><div><label>PV[...]
+    showModal('Ficha Técnica', `<div class="grid grid-cols-2 gap-4 mb-4"><div class="col-span-2"><label>Nombre</label><input id="er-n" value="${clean(r.n)}" class="input-premium"></div><div><label>PVP (€)</label><input type="number" id="er-pvp" value="${r.pvp}" class="input-premium"></div><div><label>MO (min)</label><input type="number" id="er-time" value="${r.time}" class="input-premium"></div></div><div class="bg-gray-50 p-4 rounded-xl mb-4"><div id="er-list" class="space-y-2"></div></div><div class="flex gap-2 items-end bg-white border border-gray-200 p-3 rounded-xl shadow-sm"><div class="flex-1"><label>Ingrediente</label><select id="er-sel" class="input-premium mb-0 bg-transparent border-0 p-0 text-sm font-bold"></select></div><div class="w-16"><label>Kg</label><input id="er-q" type="number" class="input-premium mb-0 p-1 text-center" placeholder="0"></div><div class="w-16"><label>Merma %</label><input id="er-m" type="number" class="input-premium mb-0 p-1 text-center" placeholder="0"></div><button class="bg-indigo-600 text-white rounded-lg w-8 h-8 flex items-center justify-center font-bold" onclick="addItemToRec()">+</button></div><button class="btn-premium mt-6" onclick="saveRec('${r.id}')">GUARDAR FICHA</button>`);
     document.getElementById('er-sel').innerHTML = db.ingredientes.map(i=>`<option value="${i.id}">${clean(i.n)}</option>`).join('');
     renderRecItems();
 }
-function addItemToRec() { const id = document.getElementById('er-sel').value; const q = parseFloat(document.getElementById('er-q').value); const m = parseFloat(document.getElementById('er-m').value) |[...]
-function renderRecItems() { document.getElementById('er-list').innerHTML = tempItems.map((it, i) => { const ing = db.ingredientes.find(x=>x.id===it.id); const realQty = it.q / (1 - (it.merma/100)); co[...]
-function saveRec(id) { const idx = db.recetas.findIndex(x=>x.id===id); const r = { id, n:document.getElementById('er-n').value, pvp:parseFloat(document.getElementById('er-pvp').value), time:parseFloat[...]
-function viewRec(id) { const r = db.recetas.find(x=>x.id===id); const c = calcRecipe(r); showModal(clean(r.n), `<div class="flex justify-around mb-6 bg-gray-50 p-4 rounded-xl"><div class="text-center"[...]
+function addItemToRec() { const id = document.getElementById('er-sel').value; const q = parseFloat(document.getElementById('er-q').value); const m = parseFloat(document.getElementById('er-m').value) || 0; if(id && q>0) { tempItems.push({type:'ing', id, q, merma:m}); renderRecItems(); } }
+function renderRecItems() { document.getElementById('er-list').innerHTML = tempItems.map((it, i) => { const ing = db.ingredientes.find(x=>x.id===it.id); const realQty = it.q / (1 - (it.merma/100)); const cost = realQty * (ing?.cost || 0); return `<div class="flex justify-between items-center text-sm border-b border-gray-200 pb-2"><div><div class="font-bold text-gray-700">${clean(ing?.n)}</div><div class="text-xs text-gray-400">Bruto: ${it.q}kg | Merma: ${it.merma}%</div></div><div class="text-right"><div class="font-mono font-bold">${cost.toFixed(2)}€</div><button onclick="tempItems.splice(${i},1);renderRecItems()" class="text-red-400 text-xs">Borrar</button></div></div>`; }).join(''); }
+function saveRec(id) { const idx = db.recetas.findIndex(x=>x.id===id); const r = { id, n:document.getElementById('er-n').value, pvp:parseFloat(document.getElementById('er-pvp').value), time:parseFloat(document.getElementById('er-time').value), items:tempItems, sales:(db.recetas.find(x=>x.id===id)?.sales || 0) }; if(idx>=0) db.recetas[idx]=r; else db.recetas.push(r); save("Ficha Guardada"); closeModal(); render('Cocina'); }
+function viewRec(id) { const r = db.recetas.find(x=>x.id===id); const c = calcRecipe(r); showModal(clean(r.n), `<div class="flex justify-around mb-6 bg-gray-50 p-4 rounded-xl"><div class="text-center"><div class="text-xs text-gray-400 font-bold">COSTE</div><div class="text-2xl font-black text-gray-800">${c.t.toFixed(2)}€</div></div><div class="text-center"><div class="text-xs text-gray-400 font-bold">MARGEN</div><div class="text-2xl font-black text-indigo-600">${r.pvp > 0 ? ((1-(c.t/r.pvp))*100).toFixed(0) : 0}%</div></div></div><div class="flex flex-wrap gap-2 mb-6 justify-center">${c.all.map(k=>`<span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs border border-blue-100">${ALLERGENS.find(a=>a.k==k)?.i} ${ALLERGENS.find(a=>a.k==k)?.n}</span>`).join('')}</div><button class="btn-ghost w-full" onclick="editRec('${id}')">EDITAR DATOS TÉCNICOS</button>`); }
 
-/* ================= 7. STOCK & MERMAS (CORREGIDO) ================= */
+/* ================= 7. STOCK ================= */
 function renderStock(app) {
     const filtered = db.ingredientes.filter(i => i.n.toLowerCase().includes(searchFilter.toLowerCase()));
     app.innerHTML = `
-        <div class="glass-card"><div class="flex justify-between items-center mb-4"><h3 class="font-bold text-gray-800">ALMACÉN</h3><button class="bg-red-50 text-red-500 px-3 py-1 rounded-lg text-xs [...]
+        <div class="glass-card"><div class="flex justify-between items-center mb-4"><h3 class="font-bold text-gray-800">ALMACÉN</h3><button class="btn-merma btn-icon" style="width:auto; padding:0 12px; gap:6px" onclick="verMermas()">📉 VER PÉRDIDAS</button></div><input placeholder="🔍 Buscar..." onkeyup="searchFilter=this.value;render('Stock')" value="${searchFilter}" class="input-premium"><div class="max-h-[60vh] overflow-y-auto">${filtered.map(i => `<div class="bg-white p-3 rounded-xl mb-2 border border-gray-100 shadow-sm flex justify-between items-center"><div onclick="editIng('${i.id}')" class="flex-1 cursor-pointer"><div class="font-bold text-gray-800">${clean(i.n)}</div><div class="text-xs text-gray-400 flex items-center gap-1">${(i.aller||[]).map(k=>`<span class="aller-tag">${ALLERGENS.find(a=>a.k==k)?.i}</span>`).join('')} ${i.stock} ${i.unit} · ${i.cost.toFixed(2)}€</div></div><div class="flex gap-2"><button class="btn-icon btn-merma" onclick="regMerma('${i.id}')" title="Merma">📉</button><button class="btn-icon btn-delete" onclick="deleteIng('${i.id}')" title="Borrar">🗑️</button></div></div>`).join('')}</div><button class="btn-premium mt-4" onclick="editIng(generateID())">+ AÑADIR PRODUCTO</button></div>`;
 }
 function deleteIng(id){ if(confirm("¿Borrar producto?")){ db.ingredientes=db.ingredientes.filter(i=>i.id!==id); save("Borrado"); render('Stock'); }}
-function regMerma(id) { const i = db.ingredientes.find(x=>x.id===id); showModal('Registrar Merma', `<p class="text-sm text-gray-500 mb-4">Producto: <b>${clean(i.n)}</b></p><label>Cantidad Perdida</lab[...]
-function saveMerma(id) { const i = db.ingredientes.find(x=>x.id===id); const q = parseFloat(document.getElementById('m-q').value); const r = document.getElementById('m-r').value; if(q>0) { i.stock -= [...]
-function verMermas() { const totalLoss = db.mermas.reduce((a,b)=>a+(b.loss||0),0); showModal('Historial de Mermas', `<div class="text-center mb-4"><h3 class="text-2xl font-black text-red-500">${totalL[...]
-function editIng(id) { const i = db.ingredientes.find(x=>x.id===id) || {id, n:'', cost:0, stock:0, unit:'kg', aller:[]}; showModal('Editar Stock', `<label>Nombre</label><input id="ei-n" value="${clean[...]
-function saveIng(id) { const divs = document.querySelectorAll('#m-body .flex div'); const aller = []; divs.forEach((d,i)=>{ if(d.classList.contains('active')) aller.push(ALLERGENS[i].k) }); const ing [...]
+function regMerma(id) { const i = db.ingredientes.find(x=>x.id===id); showModal('Registrar Merma', `<p class="text-sm text-gray-500 mb-4">Producto: <b>${clean(i.n)}</b></p><label>Cantidad Perdida</label><input type="number" id="m-q" class="input-premium"><label>Motivo</label><select id="m-r" class="input-premium"><option>Caducidad</option><option>Rotura</option><option>Error Cocina</option><option>Otro</option></select><button class="btn-danger w-full mt-4" onclick="saveMerma('${id}')">CONFIRMAR PÉRDIDA</button>`); }
+function saveMerma(id) { const i = db.ingredientes.find(x=>x.id===id); const q = parseFloat(document.getElementById('m-q').value); const r = document.getElementById('m-r').value; if(q>0) { i.stock -= q; db.mermas.push({ date:getISO(), n:i.n, q, reason:r, loss: q*i.cost }); save("Merma registrada"); closeModal(); render('Stock'); } }
+function verMermas() { const totalLoss = db.mermas.reduce((a,b)=>a+(b.loss||0),0); showModal('Historial de Mermas', `<div class="text-center mb-4"><h3 class="text-2xl font-black text-red-500">${totalLoss.toFixed(2)}€</h3><small>PÉRDIDAS TOTALES</small></div><div class="max-h-64 overflow-y-auto">${db.mermas.slice().reverse().map(m => `<div class="flex justify-between border-b py-2 text-sm"><span>${m.date} <b>${clean(m.n)}</b></span><span class="text-red-500 font-bold">-${m.loss.toFixed(2)}€</span></div>`).join('')}</div>`); }
+function editIng(id) { const i = db.ingredientes.find(x=>x.id===id) || {id, n:'', cost:0, stock:0, unit:'kg', aller:[]}; showModal('Editar Stock', `<label>Nombre</label><input id="ei-n" value="${clean(i.n)}" class="input-premium"><div class="grid grid-cols-2 gap-4"><div><label>Coste</label><input id="ei-c" type="number" value="${i.cost}" class="input-premium"></div><div><label>Stock</label><input id="ei-s" type="number" value="${i.stock}" class="input-premium"></div></div><label>Alérgenos</label><div class="flex flex-wrap gap-2 mt-2">${ALLERGENS.map(a=>`<div class="p-2 border rounded cursor-pointer ${i.aller.includes(a.k)?'bg-blue-100 border-blue-500':''}" onclick="this.classList.toggle('bg-blue-100');this.classList.toggle('border-blue-500');this.classList.toggle('active')">${a.i}</div>`).join('')}</div><button class="btn-premium mt-6" onclick="saveIng('${i.id}')">GUARDAR</button>`); setTimeout(() => { const d = document.querySelectorAll('#m-body .flex div'); i.aller.forEach(k=>{ const idx=ALLERGENS.findIndex(a=>a.k===k); if(d[idx]) d[idx].classList.add('active','bg-blue-100','border-blue-500'); }); }, 50); }
+function saveIng(id) { const divs = document.querySelectorAll('#m-body .flex div'); const aller = []; divs.forEach((d,i)=>{ if(d.classList.contains('active')) aller.push(ALLERGENS[i].k) }); const ing = { id, n:document.getElementById('ei-n').value, cost:parseFloat(document.getElementById('ei-c').value), stock:parseFloat(document.getElementById('ei-s').value), unit:'kg', aller }; const idx = db.ingredientes.findIndex(x=>x.id===id); if(idx>=0) db.ingredientes[idx]=ing; else db.ingredientes.push(ing); save(); closeModal(); render('Stock'); }
 
-/* ================= 8. DIARIO (CAJA COMPLETA) ================= */
+/* ================= 8. DIARIO ================= */
 function renderDiario(app){
     const today = getISO(); const r = db.diario.find(d => d.date === today) || {cash:0, card:0, other:0};
     const total = (r.cash||0) + (r.card||0) + (r.other||0);
     app.innerHTML = `
     <div class="glass-card"><div class="section-header"><div class="title">CIERRE CAJA</div><div class="text-indigo-600 font-bold">${today}</div></div>
     <div class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-            <div><label>Efectivo</label><input type="number" id="z-cash" value="${r.cash||0}" class="input-premium text-2xl font-bold text-center" oninput="calcTotal()"></div>
-            <div><label>Tarjeta</label><input type="number" id="z-card" value="${r.card||0}" class="input-premium text-2xl font-bold text-center" oninput="calcTotal()"></div>
-        </div>
+        <div class="grid grid-cols-2 gap-4"><div><label>Efectivo</label><input type="number" id="z-cash" value="${r.cash||0}" class="input-premium text-2xl font-bold text-center" oninput="calcTotal()"></div><div><label>Tarjeta</label><input type="number" id="z-card" value="${r.card||0}" class="input-premium text-2xl font-bold text-center" oninput="calcTotal()"></div></div>
         <div><label>Otros / Invitaciones</label><input type="number" id="z-other" value="${r.other||0}" class="input-premium text-center" oninput="calcTotal()"></div>
-        <div class="flex justify-between items-center pt-4 border-t border-gray-100"><span class="font-bold text-gray-400">TOTAL DÍA</span><span id="z-total-display" class="text-4xl font-black text-i[...]
+        <div class="flex justify-between items-center pt-4 border-t border-gray-100"><span class="font-bold text-gray-400">TOTAL DÍA</span><span id="z-total-display" class="text-4xl font-black text-indigo-600">${total.toFixed(2)}€</span></div>
     </div><button class="btn-premium mt-6" onclick="saveZ()">GUARDAR CIERRE</button></div>
     <div class="glass-card"><canvas id="chartZ"></canvas></div>`;
-    new Chart(document.getElementById('chartZ'), {type:'bar', data:{labels:db.diario.slice(-7).map(d=>d.date.slice(5)), datasets:[{label:'Ventas', data:db.diario.slice(-7).map(d=>d.total), backgroundC[...]
+    new Chart(document.getElementById('chartZ'), {type:'bar', data:{labels:db.diario.slice(-7).map(d=>d.date.slice(5)), datasets:[{label:'Ventas', data:db.diario.slice(-7).map(d=>d.total), backgroundColor:'#6366f1', borderRadius:6}]}});
 }
-function calcTotal() { const c=parseFloat(document.getElementById('z-cash').value)||0, t=parseFloat(document.getElementById('z-card').value)||0, o=parseFloat(document.getElementById('z-other').value)|[...]
-function saveZ(){ const c=parseFloat(document.getElementById('z-cash').value)||0, t=parseFloat(document.getElementById('z-card').value)||0, o=parseFloat(document.getElementById('z-other').value)||0, t[...]
+function calcTotal() { const c=parseFloat(document.getElementById('z-cash').value)||0, t=parseFloat(document.getElementById('z-card').value)||0, o=parseFloat(document.getElementById('z-other').value)||0; document.getElementById('z-total-display').innerText=(c+t+o).toFixed(2)+'€'; }
+function saveZ(){ const c=parseFloat(document.getElementById('z-cash').value)||0, t=parseFloat(document.getElementById('z-card').value)||0, o=parseFloat(document.getElementById('z-other').value)||0, tot=c+t+o; const idx=db.diario.findIndex(d=>d.date===getISO()); if(idx>=0) db.diario[idx]={date:getISO(),cash:c,card:t,other:o,total:tot}; else db.diario.push({date:getISO(),cash:c,card:t,other:o,total:tot}); save("Cierre OK"); render('Diario'); }
 
 /* ================= 9. MODAL & UTILS ================= */
 function showModal(t,c){ document.getElementById('m-title').innerText=t; document.getElementById('m-body').innerHTML=c; document.getElementById('modal-overlay').classList.remove('hidden'); }
 function closeModal(){ document.getElementById('modal-overlay').classList.add('hidden'); }
-function downloadBackup(){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(db)], {type:'application/json'})); a.download = `Arume_${getISO()}.json`; a.clic[...]
+function downloadBackup(){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(db)], {type:'application/json'})); a.download = `Arume_${getISO()}.json`; a.click(); }
 function restoreBackup(input){ const r = new FileReader(); r.onload = e => { db=secure.dec(e.target.result); save("Restaurado"); location.reload(); }; r.readAsText(input.files[0]); }
 
-function exportDatabaseCSV(){
-    // small util if needed in future
-}
-
-/* ================= INIT ================= */
 init();
 </script>
 </body>

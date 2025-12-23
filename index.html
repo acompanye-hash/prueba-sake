@@ -1,499 +1,1185 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ARUME · Simple</title>
-  <style>
-    :root{ --bg:#f6f8fb; --card:#fff; --text:#0b1720; --muted:#6b7280; --accent:#2563eb; --border:#e6eef8; --radius:10px }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:var(--bg);color:var(--text);padding-bottom:90px}
-    header{background:var(--card);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:20}
-    h1{margin:0;font-size:1rem}
-    .badge{padding:6px 10px;border-radius:999px;background:#f1f5f9;border:1px solid var(--border);cursor:pointer;font-weight:700}
-    main{max-width:900px;margin:18px auto;padding:0 12px}
-    .card{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:14px;border:1px solid var(--border)}
-    .row{display:flex;gap:8px;flex-wrap:wrap}
-    .col{flex:1;min-width:140px}
-    input,select,textarea,button{font:inherit}
-    input,select,textarea{width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;background:white}
-    button{padding:8px 10px;border-radius:8px;border:0;cursor:pointer}
-    .btn-primary{background:var(--accent);color:white}
-    .btn-ghost{background:transparent;border:1px solid var(--border)}
-    nav{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px;background:rgba(255,255,255,0.98);padding:8px;border-radius:12px;border:1px solid var(--border);z-index:30}
-    .muted{color:var(--muted);font-size:0.9rem}
-    .small{font-size:0.9rem}
-    img.preview{max-width:160px;border-radius:8px;border:1px solid #eee}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:8px;border-bottom:1px solid #f1f5f9;text-align:left}
-    .center{display:flex;align-items:center;gap:8px}
-    .hidden{display:none}
-    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:110px;background:#111;color:#fff;padding:8px 12px;border-radius:8px;z-index:50}
-    footer.note{max-width:900px;margin:0 auto 26px;padding:6px 12px;color:var(--muted);font-size:0.9rem}
-    /* modal */
-    .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:60}
-    .overlay.hidden{display:none}
-    .modal{background:white;border-radius:12px;padding:14px;max-width:520px;width:92%;box-shadow:0 10px 30px rgba(2,6,23,0.15)}
-    pre {background:#0b1220;color:#fff;padding:8px;border-radius:8px;overflow:auto}
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>ARUME V52 · Financial Control (Reescrito seguro)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <!-- Nota: si quieres mayor seguridad, descarga Chart.js y añade SRI / crossorigin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg: #f8fafc; --paper: #ffffff; --text: #0f172a; --sub: #64748b;
+            --primary: #0f172a; --accent: #2563eb;
+            --success: #16a34a; --danger: #dc2626; --warn: #d97706;
+            --border: #e2e8f0; --radius: 12px;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 110px; min-height: 100vh; }
+
+        /* HEADER */
+        header { background: var(--paper); padding: 15px 20px; position: sticky; top: 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        h1 { margin: 0; font-size: 1.3rem; font-weight: 900; letter-spacing: -0.5px; color: var(--primary); display:flex; align-items:center; gap:8px; }
+        .badge { padding: 6px 12px; border-radius: 99px; font-size: 0.75rem; background: #f1f5f9; color: var(--text); font-weight: 700; border: 1px solid var(--border); cursor: pointer; display: flex; align-items:center; gap:8px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; } .dot.ok { background: var(--success); box-shadow: 0 0 6px var(--success); }
+
+        /* LAYOUT */
+        main { max-width: 900px; margin: 0 auto; padding: 20px; animation: fade 0.3s ease-out; }
+        @keyframes fade { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+        .card { background: var(--paper); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f8fafc; padding-bottom: 12px; margin-bottom: 15px; }
+        .title { font-size: 0.85rem; font-weight: 900; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; } .col { flex: 1; min-width: 140px; }
+
+        /* KPIs FINANCIEROS */
+        .kpi-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .kpi-card { flex:1; background: var(--primary); color: white; padding: 15px; border-radius: var(--radius); text-align: center; }
+        .kpi-val { font-size: 1.4rem; font-weight: 900; }
+        .kpi-lbl { font-size: 0.7rem; opacity: 0.8; text-transform: uppercase; margin-top: 4px; }
+
+        /* LISTAS & TABLAS */
+        .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 100%; }
+        th { text-align: left; background: #f8fafc; color: var(--sub); padding: 12px 10px; font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 14px 10px; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+        tr:last-child td { border: none; }
+
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 10px; border-bottom: 1px solid #f1f5f9; transition: 0.1s; cursor: pointer; }
+        .list-item:active { background: #f1f5f9; }
+        .list-item:last-child { border: none; }
+
+        /* INPUTS */
+        label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--sub); margin-bottom: 5px; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 15px; background: #fff; font-family: inherit; margin-bottom: 10px; outline: none; }
+        input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #bfdbfe; }
+        .search-bar { background: #fff; border: 1px solid var(--border); margin-bottom: 15px; box-shadow: 0 4px 6px -2px rgba(0,0,0,0.03); padding: 10px; border-radius:10px; }
+
+        /* BOTONES */
+        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; font-size: 1rem; text-align: center; margin-top: 5px; transition: 0.1s; display: inline-flex; justify-content:center; align-items:center; gap:8px; }
+        .btn:active { transform: scale(0.97); opacity: 0.9; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-accent { background: var(--accent); color: white; }
+        .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-danger { background: #fee2e2; color: var(--danger); }
+        .btn-sm { width: auto; padding: 8px 16px; font-size: 0.8rem; margin: 0; }
+
+        .status-btn { padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; cursor: pointer; border: none; transition: 0.2s; }
+        .status-btn.paid { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .status-btn.pending { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+        /* NAV */
+        nav { position: fixed; bottom: 0; width: 100%; background: rgba(255,255,255,0.96); backdrop-filter: blur(8px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; gap:4px; padding:6px; z-index:60; }
+        nav button { background: none; border: none; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--sub); font-size: 0.65rem; font-weight: 700; padding: 5px 8px; border-radius:8px; }
+        nav button.active { opacity: 1; color: var(--accent); transform: translateY(-3px); }
+        nav button svg { width: 26px; height: 26px; fill: currentColor; }
+
+        /* MODAL */
+        .hidden { display: none !important; }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 100; backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; }
+        .modal { background: white; width: 95%; max-width: 700px; max-height: 90vh; overflow-y: auto; padding: 25px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+
+        /* PIN PAD */
+        #pin-screen { background: #0f172a; color: white; }
+        .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; max-width: 320px; margin-left: auto; margin-right: auto; }
+        .pin-btn { height: 75px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); font-size: 1.8rem; color: white; cursor: pointer; font-weight: 600; }
+        .pin-btn:active { background: rgba(255,255,255,0.2); }
+
+        /* TOAST */
+        #toast-container { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); z-index: 200; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { background: #1e293b; color: white; padding: 14px 20px; border-radius: 12px; font-size: 0.95rem; font-weight: 600; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); animation: slideUp 0.3s ease forwards; pointer-events: auto; }
+        .toast.success { border-bottom: 4px solid var(--success); }
+        .toast.error { border-bottom: 4px solid var(--danger); }
+        @keyframes slideUp { from{opacity:0; transform:translateY(20px) translateX(-50%)} to{opacity:1; transform:translateY(0) translateX(-50%)} }
+
+        /* small helpers */
+        .matrix-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; }
+        .matrix-box { padding:12px; border-radius:8px; background:#f8fafc; text-align:center; }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>ARUME · Simple</h1>
-    <div style="display:flex;gap:8px;align-items:center">
-      <div id="user-display" class="badge">Iniciar</div>
+
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+    <input type="file" id="backup-input" style="display:none" accept=".json" onchange="restoreBackup(this)">
+
+    <header>
+        <h1>ARUME <span style="font-size:0.6em; opacity:0.6; font-weight:400">V52</span></h1>
+        <button id="user-display" class="badge" onclick="logout()">
+            <div id="sync-dot" class="dot" aria-hidden="true"></div> <span id="user-name">...</span>
+        </button>
+    </header>
+
+    <main id="app" role="main"></main>
+
+    <nav id="navbar" role="navigation" aria-label="Main navigation"></nav>
+
+    <div id="modal-overlay" class="overlay hidden" role="dialog" aria-modal="true">
+        <div class="modal">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+                <h3 id="m-title" style="margin:0; font-size:1.2rem; font-weight:900; color:var(--primary)"></h3>
+                <button id="modal-close" style="background:none;border:none;font-size:2rem;cursor:pointer;color:var(--sub);line-height:1" aria-label="Cerrar">&times;</button>
+            </div>
+            <div id="m-body"></div>
+        </div>
     </div>
-  </header>
 
-  <main id="app"></main>
-
-  <nav aria-hidden="false">
-    <button class="btn-ghost" id="nav-inv">Inventario</button>
-    <button class="btn-ghost" id="nav-alb">Albaranes</button>
-    <button class="btn-ghost" id="nav-tools">Herramientas</button>
-  </nav>
-
-  <div id="modal" class="overlay hidden" role="dialog" aria-modal="true">
-    <div class="modal" id="modal-content">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <strong id="m-title"></strong>
-        <button id="m-close" class="btn-ghost">✕</button>
-      </div>
-      <div id="m-body"></div>
+    <div id="pin-screen" class="overlay" style="opacity:1">
+        <div class="modal" style="text-align:center; background:transparent; box-shadow:none; color:white">
+            <h2 style="font-size:3rem; margin:0; letter-spacing:2px; font-weight:900">ARUME</h2>
+            <p style="opacity:0.6; margin-bottom:40px; letter-spacing:1px; text-transform:uppercase">Sistema de Gestión Integral</p>
+            <div id="pin-display" style="font-size:3rem; font-weight:800; letter-spacing:15px; min-height:60px">****</div>
+            <div class="pin-grid" role="group" aria-label="Pin pad">
+                <button class="pin-btn" data-key="1">1</button><button class="pin-btn" data-key="2">2</button><button class="pin-btn" data-key="3">3</button>
+                <button class="pin-btn" data-key="4">4</button><button class="pin-btn" data-key="5">5</button><button class="pin-btn" data-key="6">6</button>
+                <button class="pin-btn" data-key="7">7</button><button class="pin-btn" data-key="8">8</button><button class="pin-btn" data-key="9">9</button>
+                <button class="pin-btn" id="pin-clear" style="color:var(--danger); border-color:rgba(239,68,68,0.3)">C</button>
+                <button class="pin-btn" data-key="0">0</button>
+                <button class="pin-btn" id="pin-ok" style="background:var(--success); border:none; color:#022c22">OK</button>
+            </div>
+        </div>
     </div>
-  </div>
-
-  <footer class="note">Versión simple — fotos comprimidas y guardadas en localStorage. No requiere servidor.</footer>
 
 <script>
-(() => {
-  'use strict';
+/*
+  Reescritura inline:
+  - Hash de PIN con PBKDF2 (Web Crypto) y migración automática de PINs en texto claro.
+  - Backup export/import; opción de cifrado AES-GCM con clave derivada del PIN.
+  - Sanitización básica al inyectar contenido (escapeHtml).
+  - Mantengo la interfaz y funciones que el HTML esperaba (funciones globales) para compatibilidad.
+*/
 
-  // Simple DB in localStorage
-  const STORAGE_KEY = 'arume_simple_v1';
-  const USER_KEY = 'arume_simple_user';
-  const MAX_IMG_WIDTH = 800; // px
-  const IMG_QUALITY = 0.7; // jpeg quality
+/* ================= Helpers ================= */
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+}
 
-  const DB_INIT = {
-    users: [{id:'u1', n:'Gerencia', pin:'0150', role:'admin'}, {id:'u2', n:'Cocina', pin:'1111', role:'staff'}],
-    ingredientes: [],
-    albaranes: []
-  };
+function showToast(msg, type='success') {
+    const box = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = (type === 'success' ? '✅ ' : '❌ ') + msg;
+    box.appendChild(toast);
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
 
-  // State
-  let db = loadDB();
-  let currentUser = loadUser();
-  const app = $('app');
+/* ================= Crypto helpers (Web Crypto PBKDF2 + AES-GCM) ================= */
+const CRYPTO = (typeof crypto !== 'undefined') ? crypto : null;
+const DEFAULT_ITER = 120_000;
+const KEYLEN = 32; // bytes
+const HASH = 'SHA-256';
 
-  // Helpers
-  function $(id){ return document.getElementById(id); }
-  function saveDB(){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); showToast('Guardado'); } catch(e){ showToast('No se pudo guardar: espacio lleno'); console.error(e); } }
-  function loadDB(){ try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : clone(DB_INIT); } catch(e){ console.warn(e); return clone(DB_INIT); } }
-  function saveUser(){ localStorage.setItem(USER_KEY, JSON.stringify(currentUser)); }
-  function loadUser(){ try { const s = localStorage.getItem(USER_KEY); return s ? JSON.parse(s) : null } catch(e){ return null } }
-  function clone(o){ return JSON.parse(JSON.stringify(o)); }
-  function showToast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2200); }
+function bufToB64(buf) {
+    return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+function b64ToBuf(b64) {
+    return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+}
 
-  // Modal
-  function showModal(title, contentNodeOrHtml){
-    $('m-title').textContent = title || '';
-    const body = $('m-body');
-    body.innerHTML = '';
-    if(contentNodeOrHtml instanceof Node) body.appendChild(contentNodeOrHtml);
-    else body.innerHTML = contentNodeOrHtml || '';
-    $('modal').classList.remove('hidden');
-    setTimeout(()=> {
-      const btn = body.querySelector('button, input, textarea, select');
-      if(btn) btn.focus();
-    },50);
-  }
-  function closeModal(){ $('modal').classList.add('hidden'); $('m-title').textContent=''; $('m-body').innerHTML=''; }
-  document.getElementById('m-close').addEventListener('click', closeModal);
-  document.getElementById('modal').addEventListener('click', (e)=> { if(e.target.id === 'modal') closeModal(); });
-  document.addEventListener('keydown', (e)=> { if(e.key === 'Escape') closeModal(); });
+async function deriveKeyFromPin(pin, salt, iterations = DEFAULT_ITER) {
+    if (!CRYPTO || !CRYPTO.subtle) throw new Error('Web Crypto API no disponible');
+    const enc = new TextEncoder();
+    const baseKey = await CRYPTO.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveBits', 'deriveKey']);
+    const key = await CRYPTO.subtle.deriveKey(
+        { name: 'PBKDF2', salt, iterations, hash: HASH },
+        baseKey,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+    );
+    return key;
+}
 
-  // Image resize/compress
-  function compressImageFile(file){
-    return new Promise((resolve, reject) => {
-      if(!file.type.startsWith('image/')) return reject(new Error('No es imagen'));
-      const fr = new FileReader();
-      fr.onload = () => {
-        const img = new Image();
-        img.onload = () => {
-          const scale = Math.min(1, MAX_IMG_WIDTH / img.width);
-          const canvas = document.createElement('canvas');
-          canvas.width = Math.round(img.width * scale);
-          canvas.height = Math.round(img.height * scale);
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img,0,0,canvas.width,canvas.height);
-          resolve(canvas.toDataURL('image/jpeg', IMG_QUALITY));
-        };
-        img.onerror = reject;
-        img.src = fr.result;
-      };
-      fr.onerror = reject;
-      fr.readAsDataURL(file);
-    });
-  }
+async function hashPin(pin, iterations = DEFAULT_ITER) {
+    if (!CRYPTO || !CRYPTO.subtle) throw new Error('Web Crypto API no disponible');
+    const salt = CRYPTO.getRandomValues(new Uint8Array(16));
+    const enc = new TextEncoder();
+    const baseKey = await CRYPTO.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveBits']);
+    const derivedBits = await CRYPTO.subtle.deriveBits({ name: 'PBKDF2', salt, iterations, hash: HASH }, baseKey, KEYLEN * 8);
+    const derived = new Uint8Array(derivedBits);
+    return `pbkdf2$${iterations}$${bufToB64(salt)}$${bufToB64(derived)}`;
+}
 
-  // UI: NAV
-  $('nav-inv').addEventListener('click', ()=> renderInventory());
-  $('nav-alb').addEventListener('click', ()=> renderAlbaranes());
-  $('nav-tools').addEventListener('click', ()=> renderTools());
-
-  // User display: login/logout
-  const userDisplay = $('user-display');
-  userDisplay.addEventListener('click', ()=> {
-    if(currentUser) {
-      // show small menu: logout or switch
-      const node = document.createElement('div');
-      node.innerHTML = `
-        <div style="margin-bottom:8px"><strong>${escapeHTML(currentUser.n)}</strong></div>
-        <div class="muted">Rol: ${escapeHTML(currentUser.role||'staff')}</div>
-        <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
-          <button id="btn-switch" class="btn btn-ghost">Cambiar</button>
-          <button id="btn-logout" class="btn btn-primary">Cerrar sesión</button>
-        </div>
-      `;
-      showModal('Usuario', node);
-      setTimeout(()=> {
-        $('btn-switch').addEventListener('click', ()=> { closeModal(); openLogin(); });
-        $('btn-logout').addEventListener('click', ()=> { currentUser = null; localStorage.removeItem(USER_KEY); userDisplay.textContent='Iniciar'; closeModal(); renderInventory(); showToast('Sesión cerrada'); });
-      }, 20);
-    } else {
-      openLogin();
+async function verifyPin(pin, stored) {
+    if (!stored) return false;
+    if (typeof stored !== 'string') return false;
+    // If stored is plain (legacy), compare directly — then migrate to hash on success
+    if (!stored.startsWith('pbkdf2$')) {
+        return pin === stored;
     }
-  });
+    try {
+        const parts = stored.split('$');
+        if (parts.length !== 4 || parts[0] !== 'pbkdf2') return false;
+        const iterations = Number(parts[1]);
+        const salt = b64ToBuf(parts[2]);
+        const expected = b64ToBuf(parts[3]);
+        const enc = new TextEncoder();
+        const baseKey = await CRYPTO.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveBits']);
+        const derivedBits = await CRYPTO.subtle.deriveBits({ name: 'PBKDF2', salt, iterations, hash: HASH }, baseKey, expected.length * 8);
+        const derived = new Uint8Array(derivedBits);
+        if (derived.length !== expected.length) return false;
+        let diff = 0;
+        for (let i = 0; i < derived.length; i++) diff |= derived[i] ^ expected[i];
+        return diff === 0;
+    } catch (e) {
+        console.warn("verifyPin error", e);
+        return false;
+    }
+}
 
-  // Login modal
-  function openLogin(){
-    const users = db.users || [];
-    const options = users.map(u => `<option value="${escapeHTML(u.id)}">${escapeHTML(u.n)}</option>`).join('');
-    const node = document.createElement('div');
-    node.innerHTML = `
-      <label>Usuario (selecciona)</label>
-      <select id="login-user">${options}</select>
-      <label style="margin-top:8px">PIN</label>
-      <input id="login-pin" type="password" placeholder="PIN (p.ej. 0150)">
-      <div style="text-align:right;margin-top:8px">
-        <button id="login-cancel" class="btn btn-ghost">Cancelar</button>
-        <button id="login-enter" class="btn btn-primary">Entrar</button>
-      </div>
+/* ================= Storage & DB ================= */
+const STORAGE_KEY = 'arume_v52';
+
+// Estructura inicial (para primeros usos)
+const DB_INIT = {
+    users: [
+        {id:'u1', n:'Gerencia', pin:'0150', role:'admin'},
+        {id:'u2', n:'Cocina', pin:'1111', role:'staff'}
+    ],
+    ingredientes: [],
+    recetas: [],
+    proveedores: [{n:'Makro'}, {n:'Tokyo-ya'}, {n:'Frutas Daniel'}],
+    albaranes: [], facturas: [], diario: [], mermas: [], lastSync: 0
+};
+
+let db = null;
+let currentUser = null;
+let currentPin = "";
+
+/* Cargar DB y migrar usuarios con PIN en texto plano a hash PBKDF2 (local) */
+async function loadDB() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+            db = JSON.parse(JSON.stringify(DB_INIT));
+            // Hash initial default users to avoid shipping plaintext on new installs
+            for (let u of db.users) {
+                if (u.pin && !u.pin.startsWith('pbkdf2$')) {
+                    u.pin = await hashPin(String(u.pin));
+                }
+            }
+            saveDB();
+            return;
+        }
+        db = JSON.parse(raw);
+        // Migrate: if any user has plain pin (not pbkdf2$), hash it now
+        let migrated = false;
+        for (let u of db.users || []) {
+            if (u.pin && typeof u.pin === 'string' && !u.pin.startsWith('pbkdf2$')) {
+                // For legacy data, hash the existing value (we assume it's the user's real PIN)
+                u.pin = await hashPin(String(u.pin));
+                migrated = true;
+            }
+        }
+        if (migrated) saveDB();
+    } catch (e) {
+        console.error('Error cargando DB, usando fallback', e);
+        db = JSON.parse(JSON.stringify(DB_INIT));
+        for (let u of db.users) u.pin = await hashPin(String(u.pin));
+        saveDB();
+    }
+}
+
+function saveDB(msg) {
+    try {
+        db.lastSync = Date.now();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+        if (msg) showToast(msg, 'success');
+    } catch (e) {
+        console.error('Save error', e);
+        showToast('Error guardando datos', 'error');
+    }
+}
+
+/* ================= Sync (opcional) ================= */
+const CONFIG = {
+    GOOGLE_URL: null, // dejar null por seguridad; si se activa, debe aceptar CORS y autenticación
+    COST_HOUR: 15
+};
+async function sync() {
+    if (!CONFIG.GOOGLE_URL) return;
+    try {
+        const r = await fetch(CONFIG.GOOGLE_URL);
+        if (!r.ok) return;
+        const c = await r.json();
+        if (c && c.lastSync && c.lastSync > (db.lastSync || 0)) {
+            db = c;
+            saveDB("Datos sincronizados");
+            setTimeout(() => location.reload(), 500);
+        }
+        document.getElementById('sync-dot').classList.add('ok');
+    } catch (e) {
+        console.warn("Sync error", e);
+    }
+}
+
+/* ================= Auth / PIN UI ================= */
+function updatePinDisplay() {
+    const d = document.getElementById('pin-display');
+    d.textContent = '•'.repeat(currentPin.length) || 'PIN';
+}
+
+function pinInput(n) {
+    if (currentPin.length >= 6) return; // allow up to 6
+    currentPin += String(n);
+    updatePinDisplay();
+}
+function pinClear() {
+    currentPin = "";
+    updatePinDisplay();
+}
+
+async function pinCheck() {
+    // Try find user with matching pin; we iterate users and verify hash
+    for (let u of db.users || []) {
+        try {
+            const ok = await verifyPin(currentPin, u.pin);
+            if (ok) {
+                currentUser = u;
+                // If stored pin was legacy plain string, the verifyPin returned true earlier only if equal;
+                // ensure user.pin is hashed now (migration handled in loadDB, but also rehash for safety)
+                if (!u.pin.startsWith('pbkdf2$')) {
+                    u.pin = await hashPin(currentPin);
+                    saveDB();
+                }
+                localStorage.setItem('arume_user', JSON.stringify({ id: u.id, n: u.n, role: u.role }));
+                document.getElementById('pin-screen').classList.add('hidden');
+                showToast(`Bienvenido ${u.n}`);
+                initAfterAuth();
+                return;
+            }
+        } catch (e) {
+            console.warn("verifyPin error", e);
+        }
+    }
+    showToast("Código incorrecto", "error");
+    pinClear();
+}
+
+function logout() {
+    localStorage.removeItem('arume_user');
+    currentUser = null;
+    setTimeout(() => location.reload(), 100);
+}
+
+/* Exponer funciones globalmente para compatibilidad con handlers inline originales */
+window.pinInput = pinInput;
+window.pinClear = pinClear;
+window.pinCheck = pinCheck;
+window.logout = logout;
+
+/* ================= UI rendering utils (seguras) ================= */
+function setInnerHTMLSafe(el, html) {
+    // Minimize injection by using text nodes where possible, but when we need markup (tables)
+    // the caller should pass escaped fields via escapeHtml().
+    el.innerHTML = html;
+}
+
+/* ================= Main app rendering ================= */
+let chartInstance = null;
+let tempItems = [];
+let searchFilter = "";
+
+function initAfterAuth() {
+    // Try restore user from localStorage if present
+    const u = localStorage.getItem('arume_user');
+    if (u && !currentUser) {
+        try {
+            const su = JSON.parse(u);
+            currentUser = db.users.find(x => x.id === su.id) || null;
+        } catch {}
+    }
+    if (currentUser) {
+        document.getElementById('pin-screen').classList.add('hidden');
+        document.getElementById('user-name').textContent = currentUser.n;
+        renderNav();
+        render(currentUser.role === 'admin' ? 'Admin' : 'Diario');
+    }
+    if (CONFIG.GOOGLE_URL) sync();
+}
+
+function renderNav() {
+    const nav = document.getElementById('navbar'); nav.innerHTML = '';
+    const views = {
+        'Diario': {icon:'<path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>', label:'CAJA Z'},
+        'Admin': {icon:'<path d="M12 2L3 5v6c0 5 3.8 9.7 9 11 5.2-1.3 9-6 9-11V5l-9-3z"/>', label:'GESTIÓN'},
+        'Cocina': {icon:'<path d="M12 2C8.1 6 7 8 7 11c0 3.9 3.1 7 7 7s7-3.1 7-7c0-3-1.1-5-5-9z"/>', label:'COCINA'},
+        'Stock': {icon:'<path d="M3 3h18v2H3V3zm2 4h14v12H5V7zm2 2v8h10V9H7z"/>', label:'STOCK'}
+    };
+
+    for(const [k,v] of Object.entries(views)){
+        if ((k === 'Admin') && currentUser && currentUser.role !== 'admin') continue;
+        const b = document.createElement('button');
+        b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${v.icon}</svg><span style="display:block">${v.label}</span>`;
+        b.id = `btn-${k}`;
+        b.onclick = () => { searchFilter = ""; render(k); };
+        nav.appendChild(b);
+    }
+}
+
+function render(view) {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById(`btn-${view}`)?.classList.add('active');
+    const app = document.getElementById('app'); app.innerHTML = '';
+
+    // DIARIO
+    if (view === 'Diario') {
+        const today = new Date().toISOString().split('T')[0];
+        const report = (db.diario || []).find(d => d.date === today);
+        const container = document.createElement('div');
+        container.className = 'card';
+        container.innerHTML = `
+            <div class="section-header"><div class="title">CIERRE DIARIO</div><div class="title">${escapeHtml(today)}</div></div>
+            <div class="row">
+                <div class="col"><label>Total Z (€)</label><input type="number" id="z-total" value="${report ? escapeHtml(report.total) : ''}" placeholder="0.00"></div>
+                <div class="col"><label>Efectivo</label><input type="number" id="z-cash" value="${report ? escapeHtml(report.cash) : ''}" placeholder="0.00"></div>
+            </div>
+            <div class="row">
+                <div class="col"><label>Tarjeta</label><input type="number" id="z-card" value="${report ? escapeHtml(report.card) : ''}" placeholder="0.00"></div>
+                <div class="col"><label>Invitaciones</label><input type="number" id="z-inv" value="${report ? escapeHtml(report.inv) : ''}" placeholder="0.00"></div>
+            </div>
+            <button class="btn btn-primary" id="save-z-btn">💾 GUARDAR CIERRE</button>
+        `;
+        app.appendChild(container);
+
+        const chartCard = document.createElement('div');
+        chartCard.className = 'card';
+        chartCard.innerHTML = `<div class="section-header"><div class="title">EVOLUCIÓN SEMANAL</div></div><canvas id="chartZ" style="max-height:200px"></canvas>`;
+        app.appendChild(chartCard);
+
+        document.getElementById('save-z-btn').onclick = saveZ;
+        setTimeout(renderChart, 100);
+        return;
+    }
+
+    // ADMIN
+    if (view === 'Admin') {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+            <div class="row">
+                <button class="btn btn-ghost col" id="btn-albaran">📥 Albarán</button>
+                <button class="btn btn-ghost col" id="btn-facturas">📑 Facturas</button>
+                <button class="btn btn-ghost col" id="btn-menu">📊 Menú</button>
+            </div>
+            <div id="admin-panel"></div>
+        `;
+        app.appendChild(wrapper);
+        document.getElementById('btn-albaran').onclick = renderAlbaran;
+        document.getElementById('btn-facturas').onclick = renderContabilidad;
+        document.getElementById('btn-menu').onclick = renderEngineering;
+        renderContabilidad();
+        return;
+    }
+
+    // COCINA
+    if (view === 'Cocina') {
+        const filtered = (db.recetas || []).filter(r => (r.n || '').toLowerCase().includes(searchFilter.toLowerCase()));
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <div class="section-header"><div class="title">FICHAS TÉCNICAS</div><button class="btn btn-sm btn-ghost" id="new-recipe">+ Nueva</button></div>
+            <input class="search-bar" placeholder="🔍 Buscar receta..." id="rec-search" value="${escapeHtml(searchFilter)}">
+            <div id="recipes-list"></div>
+        `;
+        app.appendChild(card);
+        document.getElementById('new-recipe').onclick = () => editRecipe();
+        document.getElementById('rec-search').oninput = (e) => { searchFilter = e.target.value; render('Cocina'); };
+
+        const list = document.getElementById('recipes-list');
+        list.innerHTML = filtered.map(r => {
+            const c = calcRecipe(r);
+            const small = (r.pvp || 0) > (c.total || 0) * 3 ? 'paid' : 'pending';
+            return `<div class="list-item" data-id="${escapeHtml(r.id)}">
+                <div><b>${escapeHtml(r.n)}</b> <small>(${escapeHtml(r.cat||'')})</small></div>
+                <div style="text-align:right"><span class="status-btn ${small}" style="font-size:0.75rem">${(c.total||0).toFixed(2)}€</span></div>
+            </div>`;
+        }).join('');
+        // Delegate clicks
+        list.querySelectorAll('.list-item').forEach(el => el.onclick = () => viewRecipe(el.dataset.id));
+        return;
+    }
+
+    // STOCK
+    if (view === 'Stock') {
+        const filtered = (db.ingredientes || []).filter(i => (i.n || '').toLowerCase().includes(searchFilter.toLowerCase()));
+        const totalValue = (db.ingredientes || []).reduce((acc, i) => acc + ((i.stock || 0) * (i.cost || 0)), 0);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+            <div class="kpi-row">
+                <div class="kpi-card"><div class="kpi-val">${totalValue.toFixed(2)}€</div><div class="kpi-lbl">Valor Stock</div></div>
+                <div class="kpi-card" style="background:var(--accent); cursor:pointer" id="gen-buy"><div class="kpi-val">🛒</div><div class="kpi-lbl">Generar Compra</div></div>
+            </div>
+            <div class="card">
+                <div class="section-header">
+                    <div class="title">INVENTARIO</div>
+                    <div style="display:flex; gap:5px"><button class="btn btn-sm btn-danger" id="merma-btn">Merma</button><button class="btn btn-sm btn-accent" id="new-ing">+ Nuevo</button></div>
+                </div>
+                <input class="search-bar" placeholder="🔍 Buscar ingrediente..." id="ing-search" value="${escapeHtml(searchFilter)}">
+                <div id="ingred-list"></div>
+            </div>
+        `;
+        app.appendChild(wrapper);
+        document.getElementById('gen-buy').onclick = renderShoppingList;
+        document.getElementById('new-ing').onclick = newIng;
+        document.getElementById('merma-btn').onclick = modalMerma;
+        document.getElementById('ing-search').oninput = (e) => { searchFilter = e.target.value; render('Stock'); };
+
+        const list = document.getElementById('ingred-list');
+        list.innerHTML = filtered.map(i => `
+            <div class="list-item" data-id="${escapeHtml(i.id)}">
+                <div><b>${escapeHtml(i.n)}</b> <small style="color:${(i.stock||0) < (i.min||0) ? 'red' : 'gray'}">${(Number(i.cost||0)).toFixed(2)}€/${escapeHtml(i.unit||'ud')}</small></div>
+                <div style="text-align:right"><b>${(Number(i.stock||0)).toFixed(2)} ${(escapeHtml(i.unit||'ud'))}</b><br><small>Min: ${escapeHtml(i.min||0)}</small></div>
+            </div>
+        `).join('');
+        list.querySelectorAll('.list-item').forEach(el => el.onclick = () => editIng(el.dataset.id));
+        return;
+    }
+}
+
+/* ================= Albaranes (Recepción) ================= */
+function renderAlbaran() {
+    const adminPanel = document.getElementById('admin-panel');
+    tempItems = [];
+    adminPanel.innerHTML = `
+        <div class="card" style="border-top:4px solid var(--accent)">
+            <div class="section-header"><div class="title">RECEPCIÓN MERCANCÍA</div></div>
+            <div class="row">
+                <div class="col"><label>Proveedor</label>
+                    <input list="prov-list" id="alb-prov" placeholder="Escribe o selecciona..." onfocus="this.value=''">
+                    <datalist id="prov-list">${(db.proveedores||[]).map(p=>`<option value="${escapeHtml(p.n)}">`).join('')}</datalist>
+                </div>
+                <div class="col"><label>Fecha</label><input type="date" id="alb-date" value="${new Date().toISOString().split('T')[0]}"></div>
+            </div>
+            <textarea id="alb-input" rows="3" placeholder="Pegar: Producto | Cantidad | Precio"></textarea>
+            <button class="btn btn-sm btn-ghost" id="parse-alb">🪄 LECTURA MÁGICA</button>
+            <div id="alb-body" style="margin-top:15px"></div>
+            <div style="text-align:right; font-weight:800; margin:10px 0; font-size:1.1rem" id="alb-sum">Total: 0.00€</div>
+
+            <label>Observaciones (Incidencias)</label>
+            <textarea id="alb-note" rows="2" placeholder="Ej: Faltan gambas, botella rota..."></textarea>
+
+            <button class="btn btn-primary" id="commit-alb">CONFIRMAR ENTRADA</button>
+        </div>
     `;
-    showModal('Iniciar sesión', node);
-    setTimeout(()=> {
-      const sel = $('login-user'), pin = $('login-pin'), enter = $('login-enter'), cancel = $('login-cancel');
-      enter.addEventListener('click', ()=> {
-        const uid = sel.value; const p = (pin.value||'').trim();
-        const user = db.users.find(u => u.id === uid);
-        if(!user) { showToast('Selecciona un usuario'); return; }
-        if((user.pin||'') !== p) { showToast('PIN incorrecto'); return; }
-        currentUser = { id: user.id, n: user.n, role: user.role || 'staff' };
-        saveUser();
-        userDisplay.textContent = currentUser.n;
+    document.getElementById('parse-alb').onclick = parseAlb;
+    document.getElementById('commit-alb').onclick = commitAlb;
+}
+
+function parseAlb() {
+    const txt = document.getElementById('alb-input').value || '';
+    tempItems = [];
+    txt.split(/\r?\n/).forEach(line => {
+        line = line.trim();
+        if (!line) return;
+        // Parser robust: look for numbers in the line; keep remaining as name
+        const tokens = line.split(/\s+/);
+        const nums = [];
+        const words = [];
+        tokens.forEach(tok => {
+            const clean = tok.replace('€','').replace('$','').replace(',','.').trim();
+            if (clean !== '' && !isNaN(clean) && /\d/.test(clean)) nums.push(parseFloat(clean));
+            else words.push(tok);
+        });
+        let name = words.join(' ') || 'Item';
+        let q = 1, p = 0;
+        if (nums.length >= 2) { q = nums[0]; p = nums[1]; }
+        else if (nums.length === 1) { p = nums[0]; }
+        if (p > 0 || q > 1) tempItems.push({ n: name.trim(), q: Number(q) || 1, p: Number(p) || 0, d:0, iva:10 });
+    });
+    renderAlbGrid();
+}
+
+function renderAlbGrid() {
+    const div = document.getElementById('alb-body');
+    let total = 0;
+    div.innerHTML = tempItems.map((item, i) => {
+        const bruto = (Number(item.p) || 0) * (Number(item.q) || 0);
+        const conDto = bruto * (1 - (Number(item.d || 0)/100));
+        const final = conDto * (1 + (Number(item.iva || 0)/100));
+        total += final;
+        return `<div class="alb-row">
+            <input value="${escapeHtml(item.n)}" onchange="tempItems[${i}].n=this.value" class="alb-name" placeholder="Producto">
+            <input type="number" value="${escapeHtml(item.q)}" onchange="tempItems[${i}].q=parseFloat(this.value)||0;renderAlbGrid()" class="alb-num" placeholder="Cant">
+            <input type="number" value="${escapeHtml(item.p)}" onchange="tempItems[${i}].p=parseFloat(this.value)||0;renderAlbGrid()" class="alb-num" placeholder="€/ud">
+            <input type="number" value="${escapeHtml(item.d)}" onchange="tempItems[${i}].d=parseFloat(this.value)||0;renderAlbGrid()" class="alb-num" placeholder="%Dto" style="color:blue">
+            <input type="number" value="${escapeHtml(item.iva)}" onchange="tempItems[${i}].iva=parseFloat(this.value)||0;renderAlbGrid()" class="alb-num" placeholder="%IVA" style="color:var(--sub)">
+            <button onclick="tempItems.splice(${i},1);renderAlbGrid()" style="background:none;border:none;color:var(--danger);font-weight:bold;padding:0 10px">✕</button>
+        </div>`;
+    }).join('');
+    document.getElementById('alb-sum').innerText = `Total: ${total.toFixed(2)}€`;
+}
+
+function commitAlb() {
+    if (!tempItems.length) return showToast("Vacío", "error");
+    const provName = (document.getElementById('alb-prov').value || '').trim();
+    const note = document.getElementById('alb-note').value || '';
+    if (!provName) return showToast("Falta Proveedor", "error");
+    if (!db.proveedores.find(p => p.n.toLowerCase() === provName.toLowerCase())) { db.proveedores.push({n: provName}); saveDB("Nuevo proveedor"); }
+    const date = document.getElementById('alb-date').value || new Date().toISOString().split('T')[0];
+
+    const total = tempItems.reduce((acc, it) => acc + ((Number(it.p)||0) * (Number(it.q)||0) * (1-(Number(it.d||0)/100)) * (1+(Number(it.iva||0)/100))), 0);
+
+    tempItems.forEach(item => {
+        const qty = Number(item.q) || 1;
+        const price = Number(item.p) || 0;
+        const dto = Number(item.d) || 0;
+        const unitNetCost = qty > 0 ? ((price * (1 - dto/100)) / qty) : (price * (1 - dto/100));
+        let i = db.ingredientes.find(ing => (ing.n||'').toLowerCase().trim() === (item.n||'').toLowerCase().trim());
+        if (i) {
+            const prevTotal = (Number(i.stock) || 0) * (Number(i.cost) || 0);
+            const addedTotal = qty * unitNetCost;
+            const newStock = (Number(i.stock) || 0) + qty;
+            i.cost = newStock > 0 ? ((prevTotal + addedTotal) / newStock) : unitNetCost;
+            i.stock = newStock;
+        } else {
+            db.ingredientes.push({ id: generateID(), n: item.n, stock: qty, cost: unitNetCost || 0, min:0, unit: 'ud', yield: 1, aller: [] });
+        }
+    });
+
+    db.albaranes.push({ id: generateID(), date, prov: provName, items: JSON.parse(JSON.stringify(tempItems)), total, note, invoiced: false });
+    saveDB("Entrada confirmada");
+    renderContabilidad();
+}
+
+/* ================= Contabilidad & facturación ================= */
+function renderContabilidad() {
+    const adminPanel = document.getElementById('admin-panel');
+    const pendientes = (db.albaranes || []).filter(a => !a.invoiced);
+    const grupos = {};
+    pendientes.forEach(a => {
+        if (!grupos[a.prov]) grupos[a.prov] = {count:0, total:0, ids:[]};
+        grupos[a.prov].count++; grupos[a.prov].total += a.total; grupos[a.prov].ids.push(a.id);
+    });
+
+    const lastAlbs = (db.albaranes || []).slice().reverse().slice(0,5);
+
+    let html = `<div class="card" style="border-left:4px solid var(--warn)">
+        <div class="section-header"><div class="title">PENDIENTE FACTURAR</div></div>`;
+    for (const prov of Object.keys(grupos)) {
+        const d = grupos[prov];
+        html += `<div class="list-item">
+            <div><b>${escapeHtml(prov)}</b> <small>(${escapeHtml(d.count) } alb)</small></div>
+            <div style="text-align:right"><b>${Number(d.total).toFixed(2)}€</b> <button class="btn btn-sm btn-accent" data-prov="${escapeHtml(prov)}" data-ids="${escapeHtml(d.ids.join(','))}" data-total="${escapeHtml(d.total)}">Facturar</button></div>
+        </div>`;
+    }
+    html += `</div>`;
+
+    html += `<div class="card">
+        <div class="section-header"><div class="title">ÚLTIMOS ALBARANES (VER)</div></div>
+        ${lastAlbs.map(a => `
+            <div class="list-item" data-id="${escapeHtml(a.id)}">
+                <div><span>${escapeHtml((a.date||'').substring(5))}</span> <b>${escapeHtml(a.prov)}</b></div>
+                <div style="text-align:right"><b>${Number(a.total||0).toFixed(2)}€</b> <span style="font-size:1.2rem">👁️</span></div>
+            </div>
+        `).join('')}
+    </div>`;
+
+    html += `<div class="card">
+        <div class="section-header"><div class="title">COPIAS DE SEGURIDAD</div></div>
+        <div class="row">
+            <button class="btn btn-ghost col" id="exp-back">💾 Exportar</button>
+            <button class="btn btn-ghost col" style="color:var(--accent); border-color:var(--accent)" id="imp-back">📂 Importar</button>
+        </div>
+    </div>`;
+
+    html += `<div class="card">
+        <div class="section-header"><div class="title">HISTÓRICO FACTURAS</div></div>
+        <div class="table-wrap">
+            <table><thead><tr><th>Fecha</th><th>Prov</th><th>Nº</th><th>Total</th><th>Estado</th></tr></thead>
+            <tbody>${(db.facturas||[]).slice().reverse().map(f => `
+                <tr><td>${escapeHtml((f.date||'').substring(5))}</td><td>${escapeHtml(f.prov)}</td><td>${escapeHtml(f.code||'')}</td><td><b>${Number(f.total||0).toFixed(2)}€</b></td>
+                <td><button class="status-btn ${f.paid ? 'paid' : 'pending'}" data-id="${escapeHtml(f.id)}">${f.paid ? 'PAGADO' : 'PENDIENTE'}</button></td></tr>
+            `).join('')}</tbody></table>
+        </div>
+    </div>`;
+
+    adminPanel.innerHTML = html;
+
+    // Attach event handlers
+    adminPanel.querySelectorAll('button[data-prov]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const prov = btn.dataset.prov;
+            const ids = btn.dataset.ids;
+            const total = Number(btn.dataset.total || 0);
+            invoiceModal(prov, ids, total);
+        });
+    });
+    adminPanel.querySelectorAll('.list-item[data-id]').forEach(el => el.addEventListener('click', () => viewAlbaran(el.dataset.id)));
+    document.getElementById('exp-back').onclick = () => downloadBackup();
+    document.getElementById('imp-back').onclick = () => document.getElementById('backup-input').click();
+    adminPanel.querySelectorAll('.status-btn[data-id]').forEach(b => b.onclick = () => togglePaid(b.dataset.id));
+}
+
+function viewAlbaran(id) {
+    const a = db.albaranes.find(x => x.id === id);
+    if (!a) return;
+    const itemsHtml = (a.items || []).map(it => `
+        <tr>
+            <td>${escapeHtml(it.n)}</td>
+            <td>${escapeHtml(it.q)}</td>
+            <td>${escapeHtml(it.p)}€</td>
+            <td>${escapeHtml(it.d||0)}%</td>
+            <td>${escapeHtml(it.iva||0)}%</td>
+            <td><b>${((it.q * it.p * (1-(it.d||0)/100) * (1+(it.iva||0)/100))||0).toFixed(2)}€</b></td>
+        </tr>
+    `).join('');
+    showModal(`Albarán ${escapeHtml(a.prov)}`, `
+        <div style="margin-bottom:15px; font-size:0.9rem; color:var(--sub)">
+            Fecha: <b>${escapeHtml(a.date)}</b><br>
+            Estado: <b>${a.invoiced ? 'FACTURADO' : 'PENDIENTE'}</b>
+        </div>
+        <div class="table-wrap" style="margin-bottom:15px">
+            <table style="font-size:0.8rem">
+                <thead><tr><th>Prod</th><th>Cant</th><th>Pre</th><th>Dto</th><th>IVA</th><th>Tot</th></tr></thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
+        </div>
+        <div style="text-align:right; font-size:1.2rem; font-weight:800; margin-bottom:10px">Total: ${(a.total||0).toFixed(2)}€</div>
+        ${a.note ? `<div style="background:#fffbeb; padding:10px; border-radius:8px; font-size:0.9rem">📝 <b>Nota:</b> ${escapeHtml(a.note)}</div>` : ''}
+    `);
+}
+
+function invoiceModal(prov, idsStr, total) {
+    showModal("Nueva Factura", `
+        <p>Prov: <b>${escapeHtml(prov)}</b> | Total: <b>${Number(total||0).toFixed(2)}€</b></p>
+        <label>Nº Factura</label><input id="inv-code" placeholder="0000">
+        <div style="display:flex; gap:8px; margin-top:10px">
+            <button class="btn btn-primary" id="create-inv">Crear Factura</button>
+            <button class="btn btn-ghost" id="cancel-inv">Cancelar</button>
+        </div>
+    `);
+    document.getElementById('create-inv').onclick = () => createInvoice(prov, idsStr, Number(total||0));
+    document.getElementById('cancel-inv').onclick = closeModal;
+}
+
+function createInvoice(prov, idsStr, total) {
+    const code = (document.getElementById('inv-code')?.value || '').trim();
+    if (!code) return showToast("Falta Nº", "error");
+    const ids = (''+idsStr).split(',').map(s=>s.trim()).filter(Boolean);
+    ids.forEach(id => { const a = db.albaranes.find(x => x.id == id); if (a) a.invoiced = true; });
+    db.facturas = db.facturas || [];
+    db.facturas.push({ id: generateID(), date: new Date().toISOString().split('T')[0], prov, code, total: Number(total || 0), paid: false });
+    saveDB("Factura Creada");
+    closeModal();
+    renderContabilidad();
+}
+function togglePaid(fid) { const f = db.facturas.find(x => x.id == fid); if (f) { f.paid = !f.paid; saveDB(f.paid ? "Pagado" : "Pendiente"); renderContabilidad(); } }
+
+/* ================= Extras: Cierres y chart ================= */
+function saveZ() {
+    const d = {
+        date: new Date().toISOString().split('T')[0],
+        total: parseFloat(document.getElementById('z-total')?.value) || 0,
+        cash: parseFloat(document.getElementById('z-cash')?.value) || 0,
+        card: parseFloat(document.getElementById('z-card')?.value) || 0,
+        inv: parseFloat(document.getElementById('z-inv')?.value) || 0
+    };
+    db.diario = db.diario || [];
+    const idx = db.diario.findIndex(x => x.date === d.date);
+    if (idx >= 0) db.diario[idx] = d; else db.diario.push(d);
+    saveDB("Cierre guardado");
+    render('Diario');
+}
+
+function renderChart() {
+    const ctx = document.getElementById('chartZ');
+    if (!ctx) return;
+    if (chartInstance) chartInstance.destroy();
+    const data = (db.diario || []).slice(-7);
+    chartInstance = new Chart(ctx, { type:'bar', data:{ labels: data.map(x => x.date.substring(5)), datasets:[{label:'Ventas', data:data.map(x=>x.total||0), backgroundColor:'#2563eb', borderRadius:6}]} });
+}
+
+/* ================= Recetas (cálculos) ================= */
+function calcRecipe(r) {
+    let mat = 0;
+    (r.items || []).forEach(it => {
+        const i = db.ingredientes.find(x => x.id === it.id);
+        if (i) {
+            const yieldFactor = (i.yield && i.yield > 0) ? i.yield : 1;
+            mat += (Number(it.q) || 0) / yieldFactor * (Number(i.cost) || 0);
+        }
+    });
+    const mo = ((Number(r.time) || 0) / 60) * (Number(CONFIG.COST_HOUR) || 0);
+    const total = mat + mo;
+    return { mat, mo, total };
+}
+
+function viewRecipe(id) {
+    const r = db.recetas.find(x => x.id === id);
+    if (!r) return;
+    const c = calcRecipe(r);
+    const margin = (Number(r.pvp) || 0) - (c.total || 0);
+    const itemsHtml = (r.items || []).map(it => {
+        const i = db.ingredientes.find(x => x.id === it.id);
+        if (!i) return '';
+        const yieldFactor = (i.yield && i.yield > 0) ? i.yield : 1;
+        const net = ((Number(it.q) || 0) / yieldFactor) * (Number(i.cost) || 0);
+        return `<tr>
+            <td>${escapeHtml(i.n)}</td>
+            <td style="text-align:right">${escapeHtml(it.q)}</td>
+            <td style="text-align:right">${(Number(i.cost)||0).toFixed(2)}€</td>
+            <td style="text-align:right">${net.toFixed(2)}€</td>
+        </tr>`;
+    }).join('');
+    showModal(escapeHtml(r.n), `
+        <div class="row">
+            <div class="col" style="text-align:center;background:#f8fafc;padding:10px;border-radius:8px"><b>${c.mat.toFixed(2)}€</b><br><small>Materia</small></div>
+            <div class="col" style="text-align:center;background:#f8fafc;padding:10px;border-radius:8px"><b>${c.total.toFixed(2)}€</b><br><small>Total</small></div>
+            <div class="col" style="text-align:center;color:${margin>0?'#16a34a':'#ef4444'}"><b>${margin.toFixed(2)}€</b><br><small>Mg.</small></div>
+        </div>
+        <h4 style="margin:15px 0 5px 0; font-size:0.8rem; color:var(--sub)">INGREDIENTES</h4>
+        <div class="table-wrap" style="margin-top:8px">
+            <table style="width:100%; font-size:0.85rem">
+                <thead><tr><th>Ingrediente</th><th style="text-align:right">Cant</th><th style="text-align:right">€/ud</th><th style="text-align:right">Subtotal</th></tr></thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
+        </div>
+        <div style="text-align:right;margin-top:15px"><button class="btn btn-sm btn-ghost" onclick="editRecipe('${escapeHtml(r.id)}')">✏️ Editar</button></div>
+    `);
+}
+
+function editRecipe(id) {
+    const r = id ? db.recetas.find(x => x.id === id) : {id: generateID(), n:'', cat:'', pvp:0, time:0, items:[]};
+    tempItems = JSON.parse(JSON.stringify(r.items || []));
+    showModal(id ? "Editar" : "Nueva", `
+        <label>Nombre</label><input id="er-n" value="${escapeHtml(r.n || '')}">
+        <div class="row">
+            <div class="col"><label>PVP</label><input id="er-pvp" type="number" value="${escapeHtml(r.pvp || 0)}"></div>
+            <div class="col"><label>Cat</label><input id="er-cat" value="${escapeHtml(r.cat || '')}"></div>
+        </div>
+        <label>Ingredientes</label>
+        <div id="er-list" style="background:#f8fafc;padding:10px;margin-bottom:10px;border-radius:8px;max-height:150px;overflow-y:auto"></div>
+        <div class="row" style="align-items:center">
+            <select id="er-ing" style="flex:2">${(db.ingredientes||[]).map(i=>`<option value="${escapeHtml(i.id)}">${escapeHtml(i.n)}</option>`).join('')}</select>
+            <input id="er-q" placeholder="Cant" style="flex:1" type="number">
+            <button class="btn btn-sm btn-ghost" id="add-rec-item">Añadir</button>
+        </div>
+        <button class="btn btn-primary" style="margin-top:10px" id="save-rec">Guardar</button>
+    `);
+    document.getElementById('add-rec-item').onclick = addRecItem;
+    document.getElementById('save-rec').onclick = () => saveRecipe(r.id);
+    renderRecItems();
+}
+
+function renderRecItems(){
+    const container = document.getElementById('er-list');
+    container.innerHTML = (tempItems || []).map((it,i) => {
+        const ing = db.ingredientes.find(x => x.id == it.id);
+        const name = ing ? ing.n : 'Ingrediente';
+        return `<div class="list-item" style="padding:8px">
+            <span>${escapeHtml(name)}</span>
+            <span style="display:flex;gap:8px;align-items:center">
+                <input type="number" value="${escapeHtml(it.q)}" onchange="tempItems[${i}].q=parseFloat(this.value) || 0; renderRecItems()" style="width:80px;padding:6px" />
+                <button onclick="tempItems.splice(${i},1); renderRecItems()" style="background:none;border:none;color:var(--danger);font-weight:bold">✕</button>
+            </span>
+        </div>`;
+    }).join('');
+}
+
+function addRecItem(){
+    const id = document.getElementById('er-ing').value;
+    const q = parseFloat(document.getElementById('er-q').value);
+    if (!id) return showToast("Selecciona ingrediente", "error");
+    if (!q || q <= 0) return showToast("Cantidad inválida", "error");
+    tempItems.push({ id, q });
+    document.getElementById('er-q').value = '';
+    renderRecItems();
+}
+
+function saveRecipe(id){
+    const r = {
+        id,
+        n: (document.getElementById('er-n')?.value) || 'Sin nombre',
+        cat: (document.getElementById('er-cat')?.value) || '',
+        pvp: parseFloat(document.getElementById('er-pvp')?.value) || 0,
+        time: parseFloat(document.getElementById('er-time')?.value) || 5,
+        items: tempItems,
+        sales: (db.recetas.find(x => x.id === id)?.sales) || 0
+    };
+    const idx = db.recetas.findIndex(x => x.id === id);
+    if (idx >= 0) db.recetas[idx] = r; else db.recetas.push(r);
+    saveDB("Receta guardada");
+    closeModal();
+    render('Cocina');
+}
+
+/* ================= Backup & Restore (opcional: cifrado AES-GCM) ================= */
+function downloadBackup() {
+    // Preguntar si quiere cifrar (opcional)
+    const wantEnc = confirm("¿Quieres cifrar el backup con PIN? (Aceptar = Sí)");
+    if (!wantEnc) {
+        const a = document.createElement('a');
+        const payload = JSON.stringify(db, null, 2);
+        a.href = "data:text/json;charset=utf-8," + encodeURIComponent(payload);
+        a.download = `arume_backup_${new Date().toISOString().slice(0,19).replace(/[:T]/g, '_')}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        showToast("Backup descargado");
+        return;
+    }
+    const pin = prompt("Introduce PIN para cifrar el backup:");
+    if (!pin) return showToast("PIN requerido", "error");
+    exportBackupEncrypted(db, pin).then(json => {
+        const a = document.createElement('a');
+        a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(json));
+        a.download = `arume_backup_enc_${new Date().toISOString().slice(0,19).replace(/[:T]/g, '_')}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        showToast("Backup cifrado descargado");
+    }).catch(err => {
+        console.error(err);
+        showToast("Error al cifrar backup", "error");
+    });
+}
+
+async function exportBackupEncrypted(data, pin) {
+    if (!pin) throw new Error('PIN requerido');
+    const plain = JSON.stringify({ meta: { version: 1, ts: new Date().toISOString() }, data });
+    const salt = CRYPTO.getRandomValues(new Uint8Array(12));
+    const iv = CRYPTO.getRandomValues(new Uint8Array(12));
+    const key = await deriveKeyFromPin(pin, salt);
+    const enc = new TextEncoder();
+    const ct = await CRYPTO.subtle.encrypt({ name:'AES-GCM', iv }, key, enc.encode(plain));
+    return { meta: { version: 1, encrypted: true }, salt: bufToB64(salt), iv: bufToB64(iv), data: bufToB64(ct) };
+}
+
+async function importBackupEncrypted(obj, pin) {
+    if (!obj || !obj.meta || !obj.meta.encrypted) throw new Error('Formato no soportado');
+    const salt = b64ToBuf(obj.salt);
+    const iv = b64ToBuf(obj.iv);
+    const ct = b64ToBuf(obj.data);
+    const key = await deriveKeyFromPin(pin, salt);
+    const plainBuf = await CRYPTO.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+    const dec = new TextDecoder();
+    return JSON.parse(dec.decode(plainBuf)).data;
+}
+
+function restoreBackup(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            const raw = e.target.result;
+            let json = JSON.parse(raw);
+            if (json && json.meta && json.meta.encrypted) {
+                const pin = prompt('Introduce PIN para descifrar backup:');
+                if (!pin) return showToast('PIN requerido', 'error');
+                try {
+                    const data = await importBackupEncrypted(json, pin);
+                    if (data && data.users && data.ingredientes && data.recetas) {
+                        db = data;
+                        // Asegurarse de que los usuarios estén en hash (en caso de backup antiguo)
+                        for (let u of db.users || []) {
+                            if (u.pin && !u.pin.startsWith('pbkdf2$')) {
+                                u.pin = await hashPin(String(u.pin));
+                            }
+                        }
+                        saveDB("Backup restaurado (cifrado)");
+                        setTimeout(() => location.reload(), 1200);
+                    } else showToast('Backup no válido', 'error');
+                } catch (err) {
+                    console.error(err);
+                    showToast('PIN incorrecto o archivo corrupto', 'error');
+                }
+            } else {
+                // Plain backup
+                const jsonObj = JSON.parse(raw);
+                if (jsonObj && jsonObj.users && jsonObj.ingredientes && jsonObj.recetas) {
+                    db = jsonObj;
+                    // Migrate plain pins to hashed
+                    for (let u of db.users || []) {
+                        if (u.pin && !u.pin.startsWith('pbkdf2$')) {
+                            u.pin = await hashPin(String(u.pin));
+                        }
+                    }
+                    saveDB("Backup restaurado");
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    showToast("Archivo no válido", "error");
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            showToast("Error al leer archivo", "error");
+        }
+    };
+    reader.readAsText(file);
+}
+
+/* ================= Stock / Mermas / Shopping list ================= */
+function renderShoppingList() {
+    const toBuy = (db.ingredientes || []).filter(i => (i.stock || 0) < (i.min || 0));
+    if (toBuy.length === 0) return showToast("Stock OK (Nada que comprar)");
+    let txt = "🛒 LISTA DE COMPRA ARUME:\n";
+    toBuy.forEach(i => txt += `- ${i.n}: Pedir (Stock: ${i.stock} / Min: ${i.min})\n`);
+    try { navigator.clipboard.writeText(txt); showToast("Lista copiada al portapapeles"); } catch(e) { alert(txt); }
+}
+
+function modalMerma(){
+    showModal("Merma", `
+        <select id="m-ing">${(db.ingredientes||[]).map(i=>`<option value="${escapeHtml(i.id)}">${escapeHtml(i.n)}</option>`).join('')}</select>
+        <input id="m-q" placeholder="Cantidad perdida" type="number">
+        <button class="btn btn-danger" id="save-merma">Registrar</button>
+    `);
+    document.getElementById('save-merma').onclick = saveMerma;
+}
+function saveMerma(){
+    const id = document.getElementById('m-ing').value, q = parseFloat(document.getElementById('m-q').value);
+    const i = db.ingredientes.find(x => x.id == id);
+    if (i && q && q > 0) {
+        i.stock = (Number(i.stock) || 0) - q;
+        db.mermas = db.mermas || [];
+        db.mermas.push({ date: new Date().toISOString(), n: i.n, q });
+        saveDB("Merma registrada");
         closeModal();
-        renderInventory();
-        showToast('Sesión iniciada: ' + user.n);
-      });
-      cancel.addEventListener('click', closeModal);
-      pin.focus();
-    }, 20);
-  }
-  function saveUser(){ localStorage.setItem(USER_KEY, JSON.stringify(currentUser)); }
+        render('Stock');
+    } else showToast("Valores inválidos", "error");
+}
 
-  // Render Inventory (ingredients)
-  function renderInventory(){
-    app.innerHTML = '';
-    const card = el('div.card');
-    card.innerHTML = `<div class="section-header"><div class="title">Inventario</div><div><button id="new-ing" class="btn btn-primary">+ Nuevo</button></div></div><div id="ing-list"></div>`;
-    app.appendChild(card);
-    $('#new-ing').addEventListener('click', ()=> {
-      const ing = { id: uid(), n: '', stock:0, cost:0, min:0, unit:'ud', prov:'' };
-      db.ingredientes.push(ing); saveDB(); renderInventory();
-      editIngredient(ing.id);
-    });
-    const list = $('#ing-list');
-    db.ingredientes.forEach(i=>{
-      const row = document.createElement('div');
-      row.className = 'card';
-      row.style.display = 'flex';
-      row.style.justifyContent = 'space-between';
-      row.style.alignItems = 'center';
-      row.innerHTML = `<div><strong>${escapeHTML(i.n||'Sin nombre')}</strong><div class="muted">Stock: ${i.stock||0} ${escapeHTML(i.unit||'ud')} — Coste: ${formatMoney(i.cost||0)}</div></div>
-        <div style="display:flex;gap:8px"><button class="btn btn-ghost" data-edit="${i.id}">Editar</button><button class="btn btn-ghost" data-del="${i.id}">Eliminar</button></div>`;
-      list.appendChild(row);
-    });
-    list.querySelectorAll('[data-edit]').forEach(btn=> btn.addEventListener('click', (e)=> editIngredient(e.currentTarget.dataset.edit)));
-    list.querySelectorAll('[data-del]').forEach(btn=> btn.addEventListener('click', (e)=> {
-      const id = e.currentTarget.dataset.del;
-      if(!confirm('Eliminar ingrediente?')) return;
-      db.ingredientes = db.ingredientes.filter(x=>x.id!==id);
-      saveDB(); renderInventory();
-    }));
-  }
+/* ================= Ingeniería de menú ================= */
+function renderEngineering() {
+    const prices = (db.recetas || []).map(r => r.pvp).filter(p => p > 0).sort((a,b)=>a-b);
+    const minP = prices[0] || 0;
+    const maxP = prices[prices.length-1] || 0;
+    const omnesAlert = (minP > 0 && maxP / minP > 3) ? "⚠️ Rango > 3 (Revisar precios)" : "✅ Rango Precios OK";
 
-  function editIngredient(id){
-    const ing = db.ingredientes.find(x=>x.id===id);
-    if(!ing) return showToast('Ingrediente no encontrado');
-    const node = document.createElement('div');
-    node.innerHTML = `
-      <label>Nombre</label><input id="ei-n" value="${escapeHTML(ing.n)}">
-      <div class="row" style="margin-top:8px">
-        <div class="col"><label>Stock</label><input id="ei-stock" type="number" value="${ing.stock||0}"></div>
-        <div class="col"><label>Min</label><input id="ei-min" type="number" value="${ing.min||0}"></div>
-      </div>
-      <div class="row" style="margin-top:8px">
-        <div class="col"><label>Coste</label><input id="ei-cost" type="number" value="${ing.cost||0}"></div>
-        <div class="col"><label>Unidad</label><input id="ei-unit" value="${escapeHTML(ing.unit||'ud')}"></div>
-      </div>
-      <label style="margin-top:8px">Proveedor</label><input id="ei-prov" value="${escapeHTML(ing.prov||'')}">
-      <div style="text-align:right;margin-top:10px">
-        <button id="ei-cancel" class="btn btn-ghost">Cancelar</button>
-        <button id="ei-save" class="btn btn-primary">Guardar</button>
-      </div>
+    let totalSales = 0;
+    (db.recetas || []).forEach(r => totalSales += (r.sales || 0));
+    let stars = 0, plows = 0, puzzles = 0, dogs = 0;
+    const avgPop = totalSales > 0 ? (100 / (db.recetas||[]).length) * 0.7 : 0;
+
+    (db.recetas || []).forEach(r => {
+        const c = calcRecipe(r);
+        const margin = (r.pvp || 0) - (c.total || 0);
+        const pop = totalSales > 0 ? ((r.sales || 0) / totalSales) * 100 : 0;
+        if (pop >= avgPop && margin >= 6) stars++;
+        else if (pop >= avgPop && margin < 6) plows++;
+        else if (pop < avgPop && margin >= 6) puzzles++;
+        else dogs++;
+    });
+
+    document.getElementById('admin-panel').innerHTML = `
+        <div class="card">
+            <div class="section-header"><div class="title">OMNES (AMPLITUD PRECIOS)</div></div>
+            <div class="row">
+                <div class="col" style="text-align:center; background:#f1f5f9; padding:10px; border-radius:8px">Min <b>${minP.toFixed(2)}€</b></div>
+                <div class="col" style="text-align:center; background:#f1f5f9; padding:10px; border-radius:8px">Max <b>${maxP.toFixed(2)}€</b></div>
+            </div>
+            <div style="text-align:center; margin-top:10px; font-weight:bold">${omnesAlert}</div>
+        </div>
+        <div class="card">
+            <div class="section-header"><div class="title">MATRIZ BCG</div></div>
+            <div class="matrix-grid">
+                <div class="matrix-box bg-star"><span class="matrix-val">${stars}</span><span class="matrix-lbl">Estrellas</span></div>
+                <div class="matrix-box bg-plow"><span class="matrix-val">${plows}</span><span class="matrix-lbl">Caballos</span></div>
+                <div class="matrix-box bg-puzzle"><span class="matrix-val">${puzzles}</span><span class="matrix-lbl">Puzzles</span></div>
+                <div class="matrix-box bg-dog"><span class="matrix-val">${dogs}</span><span class="matrix-lbl">Perros</span></div>
+            </div>
+            <button class="btn btn-accent" style="width:100%;margin-top:15px" onclick="editSales()">📝 Introducir Ventas (TPV)</button>
+        </div>
     `;
-    showModal('Editar Ingrediente', node);
-    setTimeout(()=> {
-      $('#ei-save').addEventListener('click', ()=> {
-        ing.n = $('#ei-n').value.trim() || ing.n;
-        ing.stock = parseFloat($('#ei-stock').value) || 0;
-        ing.min = parseFloat($('#ei-min').value) || 0;
-        ing.cost = parseFloat($('#ei-cost').value) || 0;
-        ing.unit = $('#ei-unit').value || ing.unit;
-        ing.prov = $('#ei-prov').value || ing.prov;
-        saveDB(); closeModal(); renderInventory();
-      });
-      $('#ei-cancel').addEventListener('click', closeModal);
-    }, 20);
-  }
+}
 
-  // Render Albaranes
-  function renderAlbaranes(){
-    app.innerHTML = '';
-    const node = el('div.card');
-    node.innerHTML = `<div class="section-header"><div class="title">Albaranes</div><div><button id="new-alb" class="btn btn-primary">+ Nuevo</button> <button id="export-alb" class="btn btn-ghost">Export CSV</button></div></div>
-      <div id="alb-list"></div>`;
-    app.appendChild(node);
-    $('#new-alb').addEventListener('click', newAlbaran);
-    $('#export-alb').addEventListener('click', exportAlbaranesCSV);
-    renderAlbList();
-  }
+function editSales() {
+    const html = `<div style="max-height:60vh;overflow-y:auto">
+        <p style="color:var(--sub);font-size:0.8rem;margin-bottom:15px">Ventas periodo (unidades):</p>
+        ${(db.recetas||[]).map(r => `
+            <div class="list-item">
+                <span>${escapeHtml(r.n)}</span>
+                <input type="number" style="width:90px;margin:0;padding:10px;text-align:right" value="${escapeHtml(r.sales||0)}" onchange="updateSale('${escapeHtml(r.id)}', this.value)">
+            </div>
+        `).join('')}
+    </div>`;
+    showModal("Actualizar Ventas", html);
+}
+function updateSale(rid, val) { const r = db.recetas.find(x => x.id === rid); if (r) { r.sales = parseFloat(val) || 0; saveDB(); } }
 
-  function renderAlbList(){
-    const list = $('#alb-list');
-    list.innerHTML = '';
-    if(!db.albaranes.length) { list.innerHTML = '<div class="muted">No hay albaranes</div>'; return; }
-    db.albaranes.slice().reverse().forEach(alb=>{
-      const row = document.createElement('div'); row.className='card'; row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center';
-      row.innerHTML = `<div><strong>${escapeHTML(alb.prov || 'Sin proveedor')}</strong><div class="muted">${escapeHTML(alb.date || '')} — Total: ${formatMoney(alb.total||0)}</div></div>
-        <div style="display:flex;gap:8px"><button class="btn btn-ghost" data-view="${alb.id}">Ver</button><button class="btn btn-ghost" data-del="${alb.id}">Eliminar</button></div>`;
-      list.appendChild(row);
+/* ================= Modal helpers ================= */
+function showModal(title, html) {
+    const overlay = document.getElementById('modal-overlay');
+    document.getElementById('m-title').textContent = title;
+    document.getElementById('m-body').innerHTML = html;
+    overlay.classList.remove('hidden');
+}
+function closeModal() {
+    document.getElementById('modal-overlay').classList.add('hidden');
+}
+document.getElementById('modal-close').onclick = closeModal;
+
+/* ================= Misc utilities ================= */
+function generateID() {
+    return (crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(36).slice(2)));
+}
+
+/* ================= Initialization ================= */
+async function init() {
+    // Load DB and migrate users if necessary
+    await loadDB();
+    // If user already logged in, set currentUser from localStorage
+    const u = localStorage.getItem('arume_user');
+    if (u) {
+        try {
+            const su = JSON.parse(u);
+            currentUser = db.users.find(x => x.id === su.id) || null;
+            if (currentUser) {
+                document.getElementById('pin-screen').classList.add('hidden');
+                document.getElementById('user-name').textContent = currentUser.n;
+                renderNav();
+                render(currentUser.role === 'admin' ? 'Admin' : 'Diario');
+            } else {
+                document.getElementById('pin-screen').classList.remove('hidden');
+            }
+        } catch { document.getElementById('pin-screen').classList.remove('hidden'); }
+    } else {
+        document.getElementById('pin-screen').classList.remove('hidden');
+    }
+
+    // Wire PIN pad buttons
+    document.querySelectorAll('.pin-btn[data-key]').forEach(b => b.addEventListener('click', () => pinInput(b.dataset.key)));
+    document.getElementById('pin-clear').addEventListener('click', pinClear);
+    document.getElementById('pin-ok').addEventListener('click', () => pinCheck());
+
+    // Small accessibility: allow keyboard numeric input on body
+    window.addEventListener('keydown', (e) => {
+        if (document.getElementById('pin-screen') && !document.getElementById('pin-screen').classList.contains('hidden')) {
+            if (/\d/.test(e.key)) pinInput(e.key);
+            if (e.key === 'Backspace') pinClear();
+            if (e.key === 'Enter') pinCheck();
+        }
     });
-    list.querySelectorAll('[data-view]').forEach(b=> b.addEventListener('click', (e)=> viewAlbaran(e.currentTarget.dataset.view)));
-    list.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', (e)=> {
-      const id = e.currentTarget.dataset.del;
-      if(!confirm('Eliminar albarán?')) return;
-      db.albaranes = db.albaranes.filter(x=>x.id!==id); saveDB(); renderAlbList();
-    }));
-  }
 
-  // New albaran modal
-  function newAlbaran(){
-    const node = document.createElement('div');
-    node.innerHTML = `
-      <label>Proveedor</label><input id="alb-prov">
-      <label style="margin-top:8px">Fecha</label><input id="alb-date" type="date" value="${new Date().toISOString().slice(0,10)}">
-      <label style="margin-top:8px">Items (una línea por producto: nombre | cantidad | precio)</label>
-      <textarea id="alb-input" rows="4" placeholder="Arroz | 5 | 10"></textarea>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button id="alb-parse" class="btn btn-ghost">Parsear</button>
-        <button id="alb-attach" class="btn btn-ghost">Adjuntar foto</button>
-      </div>
-      <div id="alb-photo-preview" style="margin-top:8px"></div>
-      <div id="alb-items" style="margin-top:8px"></div>
-      <label style="margin-top:8px">Observaciones</label><textarea id="alb-note" rows="2"></textarea>
-      <div style="text-align:right;margin-top:8px"><button id="alb-cancel" class="btn btn-ghost">Cancelar</button><button id="alb-save" class="btn btn-primary">Guardar albarán</button></div>
-    `;
-    showModal('Nuevo Albarán', node);
-    let tempItems = [];
-    setTimeout(()=> {
-      $('#alb-attach').addEventListener('click', ()=> {
-        const input = document.createElement('input'); input.type='file'; input.accept='image/*'; input.onchange = async (e) => {
-          const f = e.target.files[0]; if(!f) return;
-          try {
-            const dataUrl = await compressImageFile(f);
-            // show preview
-            $('#alb-photo-preview').innerHTML = `<img src="${dataUrl}" class="preview">`;
-            // store temporarily on modal DOM
-            $('#alb-photo-preview').dataset.photo = dataUrl;
-          } catch(err){ showToast('Error al procesar imagen'); console.error(err); }
-        }; input.click();
-      });
+    // Ensure admin panel exists
+    if (!document.getElementById('admin-panel')) {
+        // Create container for admin panel (used by render functions)
+        const admin = document.createElement('div');
+        admin.id = 'admin-panel';
+        document.body.appendChild(admin);
+    }
 
-      $('#alb-parse').addEventListener('click', ()=> {
-        const raw = $('#alb-input').value || '';
-        tempItems = [];
-        const lines = raw.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-        lines.forEach(line=>{
-          const parts = line.split(/\s*\|\s*|\t| {2,}/).filter(Boolean);
-          let name = parts[0] || '';
-          let q = 1, p = 0;
-          if(parts.length >= 2){ q = parseFloat(parts[1]) || 1; p = parseFloat(parts[2]||parts[1]) || 0; }
-          else {
-            const nums = Array.from(line.matchAll(/-?[\d\.,]+/g)).map(m=>parseFloat(m[0].replace(',','.')));
-            if(nums.length>=2){ q = nums[0]; p = nums[1]; }
-            else if(nums.length===1) p = nums[0];
-            const text = line.replace(/[\d\.,€$]/g,'').trim(); if(text) name = text;
-          }
-          tempItems.push({ n: name, q: q||1, p: p||0 });
-        });
-        renderAlbItems();
-      });
+    // If sync URL configured, try to sync
+    if (CONFIG.GOOGLE_URL) sync();
+}
 
-      function renderAlbItems(){
-        const cont = $('#alb-items'); cont.innerHTML = '';
-        if(!tempItems.length) { cont.innerHTML = '<div class="muted">Sin items</div>'; return; }
-        const table = document.createElement('table');
-        table.innerHTML = `<thead><tr><th>Producto</th><th>Cant</th><th>Precio</th><th></th></tr></thead>`;
-        const tbody = document.createElement('tbody');
-        tempItems.forEach((it, idx)=> {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${escapeHTML(it.n)}</td><td>${it.q}</td><td>${formatMoney(it.p)}</td><td><button data-rem="${idx}" class="btn btn-ghost">Quitar</button></td>`;
-          tbody.appendChild(tr);
-        });
-        table.appendChild(tbody);
-        cont.appendChild(table);
-        cont.querySelectorAll('[data-rem]').forEach(b=> b.addEventListener('click', e=> { const i = Number(e.currentTarget.dataset.rem); tempItems.splice(i,1); renderAlbItems(); }));
-      }
+init(); // start
 
-      $('#alb-cancel').addEventListener('click', closeModal);
-      $('#alb-save').addEventListener('click', ()=> {
-        const prov = $('#alb-prov').value.trim();
-        if(!prov) return showToast('Proveedor requerido');
-        const date = $('#alb-date').value;
-        const items = tempItems.slice();
-        if(!items.length) return showToast('Añade al menos un item');
-        // compute total simple
-        const total = items.reduce((s,it)=> s + ((it.p||0)*(it.q||1)), 0);
-        const photo = $('#alb-photo-preview').dataset.photo || null;
-        const note = $('#alb-note').value || null;
-        const alb = { id: uid(), prov, date, items, total, note, photo };
-        db.albaranes.push(alb);
-        saveDB(); closeModal(); renderAlbaranes();
-      });
-    }, 50);
-  }
-
-  // View albaran
-  function viewAlbaran(id){
-    const a = db.albaranes.find(x=>x.id===id); if(!a) return showToast('No encontrado');
-    const node = document.createElement('div');
-    const itemsHtml = a.items.map(it => `<tr><td>${escapeHTML(it.n)}</td><td>${it.q}</td><td>${formatMoney(it.p)}</td></tr>`).join('');
-    node.innerHTML = `
-      <div class="muted">Proveedor: <strong>${escapeHTML(a.prov)}</strong></div>
-      <div class="muted" style="margin-top:6px">Fecha: ${escapeHTML(a.date)}</div>
-      ${a.photo ? `<div style="margin-top:8px"><img src="${a.photo}" class="preview"></div>` : ''}
-      <table style="margin-top:8px"><thead><tr><th>Producto</th><th>Cant</th><th>Precio</th></tr></thead><tbody>${itemsHtml}</tbody></table>
-      ${a.note ? `<div style="margin-top:8px;background:#fffbeb;padding:8px;border-radius:8px">📝 ${escapeHTML(a.note)}</div>` : ''}
-      <div style="text-align:right;margin-top:10px">
-        <button id="alb-close" class="btn btn-ghost">Cerrar</button>
-      </div>`;
-    showModal('Albarán', node);
-    setTimeout(()=> { $('#alb-close').addEventListener('click', closeModal); }, 20);
-  }
-
-  // Export CSV
-  function exportAlbaranesCSV(){
-    let csv = 'Proveedor,Fecha,Total,Nota\\n';
-    db.albaranes.forEach(a => {
-      const prov = (a.prov||'').replace(/"/g,'""');
-      const date = a.date || '';
-      const total = (a.total||0).toFixed(2);
-      const note = (a.note||'').replace(/"/g,'""');
-      csv += `"${prov}","${date}",${total},"${note}"\\n`;
-    });
-    const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'albaranes.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-  }
-
-  // Tools: smart order (simple)
-  function renderTools(){
-    app.innerHTML = '';
-    const node = el('div.card');
-    node.innerHTML = `<div class="section-header"><div class="title">Herramientas</div><div></div></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button id="tools-order" class="btn btn-primary">Pedido inteligente</button>
-        <button id="tools-backup" class="btn btn-ghost">Backup JSON</button>
-        <button id="tools-restore" class="btn btn-ghost">Restaurar</button>
-      </div>
-      <div id="tools-body" style="margin-top:12px"></div>`;
-    app.appendChild(node);
-    $('#tools-order').addEventListener('click', generateSmartOrder);
-    $('#tools-backup').addEventListener('click', ()=> {
-      const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'arume_backup.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-    });
-    $('#tools-restore').addEventListener('click', ()=> {
-      const input = document.createElement('input'); input.type='file'; input.accept='.json'; input.onchange = (e)=> {
-        const f = e.target.files[0]; if(!f) return;
-        const fr = new FileReader();
-        fr.onload = ()=> {
-          try {
-            const json = JSON.parse(fr.result);
-            if(!confirm('Restaurar sobrescribirá la BD local. Continuar?')) return;
-            db = json; saveDB(); renderInventory(); renderAlbaranes(); showToast('Backup restaurado');
-          } catch(err){ showToast('Backup inválido'); }
-        };
-        fr.readAsText(f);
-      }; input.click();
-    });
-  }
-
-  function generateSmartOrder(){
-    const below = (db.ingredientes||[]).filter(i => (i.stock||0) < (i.min||0));
-    if(!below.length) return showToast('Nada por debajo del mínimo');
-    const groups = {};
-    below.forEach(i => { const prov = i.prov || 'Proveedor general'; (groups[prov] = groups[prov]||[]).push(i); });
-    const div = document.createElement('div');
-    Object.entries(groups).forEach(([prov, items], idx) => {
-      let text = `Hola ${prov},\\nNecesito:\\n`;
-      items.forEach(it => text += `- ${it.n}: ${(it.min||0)-(it.stock||0)} ${it.unit||''}\\n`);
-      const block = document.createElement('div'); block.style.border='1px solid #eee'; block.style.padding='8px'; block.style.marginBottom='8px'; block.innerHTML = `<strong>${escapeHTML(prov)}</strong><pre style="white-space:pre-wrap">${escapeHTML(text)}</pre>
-        <div style="text-align:right"><button data-text="${escapeHTML(text)}" class="btn btn-ghost copy">Copiar</button> <button data-text="${escapeHTML(text)}" class="btn btn-primary wa">WhatsApp</button></div>`;
-      div.appendChild(block);
-    });
-    showModal('Pedido inteligente', div);
-    setTimeout(()=> {
-      Array.from(div.querySelectorAll('.copy')).forEach(b => b.addEventListener('click', e => { const txt = e.currentTarget.dataset.text; navigator.clipboard.writeText(txt).then(()=> showToast('Copiado')); }));
-      Array.from(div.querySelectorAll('.wa')).forEach(b => b.addEventListener('click', e => { const txt = e.currentTarget.dataset.text; openWhatsAppWithText(txt); }));
-    }, 40);
-  }
-
-  /* ---------- Simple helpers ---------- */
-  function el(tag){ return document.createElement(tag); }
-  function escapeHTML(s=''){ return String(s).replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;',"`":'&#96;'}[ch])); }
-  function openWhatsAppWithText(text){ window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); }
-
-  /* ---------- Init ---------- */
-  document.addEventListener('DOMContentLoaded', ()=>{
-    // init values
-    if(!Array.isArray(db.users)) db.users = DB_INIT.users;
-    // show user
-    currentUser = loadUser();
-    $('user-display').textContent = currentUser ? currentUser.n : 'Iniciar';
-    // default view
-    renderInventory();
-  });
-
-  // expose small debug API
-  window._arume = {
-    db: () => clone(db),
-    user: () => clone(currentUser)
-  };
-
-})();
+/* ================= Expose some functions for testing / compatibility ================= */
+window.saveDB = saveDB;
+window.db = () => db;
+window.hashPin = hashPin;
+window.verifyPin = verifyPin;
+window.exportBackupEncrypted = exportBackupEncrypted;
+window.importBackupEncrypted = importBackupEncrypted;
 </script>
 </body>
 </html>
